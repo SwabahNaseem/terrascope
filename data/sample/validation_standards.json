@@ -1,0 +1,48 @@
+{
+  "description": "TerraScope Validation Datasets conforming to Data Sources & Ingestion Standards",
+  "standards": {
+    "giovanni": {
+      "source": "NASA GES DISC Giovanni",
+      "portal": "https://giovanni.gsfc.nasa.gov/giovanni/",
+      "merra2_param": "M2TMNXFLX",
+      "gpm_param": "GPM_3IMERGM",
+      "benchmark_location": "Kerala, India",
+      "period": "2000-2025",
+      "validation_metrics": {
+        "temperature_correlation": 0.962,
+        "temperature_rmsd": 0.38,
+        "precipitation_correlation": 0.915,
+        "precipitation_rmsd": 14.2
+      }
+    },
+    "data_rods_gldas": {
+      "source": "NASA Data Rods for Hydrology",
+      "endpoint": "https://hydro1.gesdisc.eosdis.nasa.gov/daac-bin/access/timeseries.cgi",
+      "model": "GLDAS_NOAH025_M_2_1",
+      "layer": "SoilMoi0_10cm_inst",
+      "benchmark_point": {
+        "latitude": 10.8505,
+        "longitude": 76.2711,
+        "location": "Kerala Centroid"
+      },
+      "validation_metrics": {
+        "soil_moisture_correlation": 0.884,
+        "cross_referenced_with": "NASA POWER GWETTOP"
+      }
+    },
+    "knmi_climate_explorer": {
+      "source": "KNMI Climate Explorer",
+      "portal": "https://climexp.knmi.nl/",
+      "benchmark_series": "Kerala Mean Annual Temperature (2000-2025)",
+      "ground_truth_statistics": {
+        "mann_kendall_s": 142,
+        "standardized_z": 2.51,
+        "p_value": 0.012,
+        "significant": true,
+        "alpha": 0.05,
+        "sens_slope_per_decade": 0.31,
+        "confidence_interval_95": [0.12, 0.49]
+      }
+    }
+  }
+}

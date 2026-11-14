@@ -1,20 +1,44 @@
 /**
  * TerraScope Map Module
- * Handles Leaflet interactive canvas, GeoJSON boundaries, national choropleth styling,
- * state isolation, hover dual-encoding tooltips, and floating reset controls.
- * Matches Technical Specification Section 3.1 & 4.3
+ * Handles Leaflet map rendering, GeoJSON boundary styling, choropleth color classification,
+ * state isolation, dual-encoding hover tooltips, zoom-to-state animations, and floating navigation controls.
+ * Matches Technical Specification Section 3.1, 3.5 & 4.3
  */
 
 import { loadStateAnalysis } from './controls.js';
 
 let mapInstance = null;
 let geojsonLayer = null;
-let stateTrendsData = {};
-let selectedStateName = null;
-let onStateSelectedCallback = null;
+let stateLayersMap = new Map(); // Name/code (lowercase) -> Leaflet Layer
+let currentSelectedState = null;
+let activeChoroplethData = {};
+let backButtonControl = null;
+let onStateClickCallback = null;
+let onResetCallback = null;
 
 const INDIA_CENTER = [22.5937, 78.9629];
 const DEFAULT_ZOOM = 5;
+
+// Color mapping matching Design Tokens and Project Specification Section 7.3
+export const TREND_COLORS = {
+  strong_increase: '#A8461F', // Deep Terracotta
+  slight_increase: '#E3A27F', // Light Terracotta
+  no_clear_change: '#D9D2BF', // Warm Neutral Grey
+  slight_decrease: '#B7C7A3', // Light Sage
+  strong_decrease: '#2F5D3A', // Forest Green
+  no_data:         '#FAF6EC'  // Hatched Ivory
+};
+
+export const CHOROPLETH_COLORS = TREND_COLORS;
+
+export const TREND_SYMBOLS = {
+  strong_increase: '▲▲',
+  slight_increase: '▲',
+  no_clear_change: '=',
+  slight_decrease: '▼',
+  strong_decrease: '▼▼',
+  no_data:         '—'
+};
 
 // Verified fallback classifications matching data/sample/india_map_trends_sample.json
 export const FALLBACK_MAP_TRENDS = {
@@ -56,164 +80,260 @@ export const FALLBACK_MAP_TRENDS = {
   "Dadra and Nagar Haveli and Daman and Diu": { class: "strong_increase", slope_per_decade: 0.44, significant: true, symbol: "▲▲" }
 };
 
-// Direction of Change Color Palette mapping (Section 7.3)
-export const CHOROPLETH_COLORS = {
-  strong_increase: "#A8461F",  // Deep Terracotta
-  slight_increase: "#E3A27F",  // Light Terracotta
-  no_clear_change: "#D9D2BF",  // Warm Neutral Gray
-  slight_decrease: "#B7C7A3",  // Light Sage
-  strong_decrease: "#2F5D3A",  // Forest Green
-  no_data:         "#FAF6EC"   // Hatched Ivory
+// Known centroid fallbacks for all 36 Indian States and Union Territories
+const STATE_CENTROIDS = {
+  'Andhra Pradesh': [15.9129, 79.7400],
+  'Arunachal Pradesh': [28.2180, 94.7278],
+  'Assam': [26.2006, 92.9376],
+  'Bihar': [25.0961, 85.3131],
+  'Chhattisgarh': [21.2787, 81.8661],
+  'Goa': [15.2993, 74.1240],
+  'Gujarat': [22.2587, 71.1924],
+  'Haryana': [29.0588, 76.0856],
+  'Himachal Pradesh': [31.1048, 77.1734],
+  'Jharkhand': [23.6102, 85.2799],
+  'Karnataka': [15.3173, 75.7139],
+  'Kerala': [10.8505, 76.2711],
+  'Madhya Pradesh': [22.9734, 78.6569],
+  'Maharashtra': [19.7515, 75.7139],
+  'Manipur': [24.6637, 93.9063],
+  'Meghalaya': [25.4670, 91.3662],
+  'Mizoram': [23.1645, 92.9376],
+  'Nagaland': [26.1584, 94.5624],
+  'Odisha': [20.9517, 85.0985],
+  'Punjab': [31.1471, 75.3412],
+  'Rajasthan': [27.0238, 74.2179],
+  'Sikkim': [27.5330, 88.5122],
+  'Tamil Nadu': [11.1271, 78.6569],
+  'Telangana': [18.1124, 79.0193],
+  'Tripura': [23.9408, 91.9882],
+  'Uttar Pradesh': [26.8467, 80.9462],
+  'Uttarakhand': [30.0668, 79.0193],
+  'West Bengal': [22.9868, 87.8550],
+  'Andaman and Nicobar Islands': [11.7401, 92.6586],
+  'Chandigarh': [30.7333, 76.7794],
+  'Dadra and Nagar Haveli and Daman and Diu': [20.4283, 72.8397],
+  'Delhi': [28.7041, 77.1025],
+  'Jammu and Kashmir': [33.7782, 76.5762],
+  'Ladakh': [34.1526, 77.5771],
+  'Lakshadweep': [10.5667, 72.6417],
+  'Puducherry': [11.9416, 79.8083]
 };
 
 /**
  * Initialize Leaflet Map
  * @param {string} containerId - Element ID for map container
  * @param {Function} onStateClick - Callback when state polygon is clicked
+ * @param {Function} [onReset] - Callback when view is reset to national overview
  * @returns {L.Map}
  */
-export function initMap(containerId, onStateClick) {
+export function initMap(containerId = 'map-view', onStateClick, onReset) {
   if (typeof L === 'undefined') {
-    console.warn('[TerraScope Map] Leaflet library not loaded.');
+    console.warn('[TerraScope] Leaflet library not loaded.');
     return null;
   }
 
-  onStateSelectedCallback = onStateClick;
+  onStateClickCallback = onStateClick;
+  onResetCallback = onReset;
 
   mapInstance = L.map(containerId, {
     center: INDIA_CENTER,
     zoom: DEFAULT_ZOOM,
     minZoom: 4,
     maxZoom: 9,
-    zoomControl: true,
+    zoomControl: false,
     scrollWheelZoom: true
   });
 
+  // Custom Zoom Control at top-right
+  L.control.zoom({ position: 'topright' }).addTo(mapInstance);
+
   // CartoDB Positron high-contrast neutral basemap
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
     subdomains: 'abcd',
     maxZoom: 19
   }).addTo(mapInstance);
 
-  // Setup Back to India button
+  // Connect floating "< Back to India" button in HTML DOM
   setupBackToIndiaButton();
 
-  // Setup Interactive Legend Hovers
+  // Floating "< Back to India" Leaflet Control fallback
+  createBackToIndiaControl();
+
+  // Setup interactive legend hover highlighting
   setupLegendInteractivity();
 
-  // Load Choropleth Data & Geometry
-  loadMapTrendsAndGeoJSON();
+  // Load choropleth trends & India states GeoJSON
+  activeChoroplethData = { ...FALLBACK_MAP_TRENDS };
+  loadIndiaGeoJSON();
 
   return mapInstance;
 }
 
 /**
- * Connects the floating "< Back to India" button
+ * Connects the floating "< Back to India" button in HTML
  */
 function setupBackToIndiaButton() {
   const btn = document.getElementById('btn-back-to-india');
   if (!btn) return;
 
-  btn.addEventListener('click', () => {
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
     resetToNationalView();
   });
 }
 
 /**
- * Loads state-wise trends classification followed by India states GeoJSON
+ * Creates floating "< Back to India" Leaflet Control at top-left
  */
-async function loadMapTrendsAndGeoJSON() {
-  stateTrendsData = { ...FALLBACK_MAP_TRENDS };
+function createBackToIndiaControl() {
+  const BackControl = L.Control.extend({
+    options: { position: 'topleft' },
+    onAdd: function () {
+      const container = L.DomUtil.create('div', 'map-back-container');
+      container.style.display = 'none';
 
-  // Try fetching dynamic trends classification from REST API
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 1500);
-    const res = await fetch('/api/map-trends?variable=temperature', { signal: controller.signal });
-    clearTimeout(timeoutId);
+      const btn = L.DomUtil.create('button', 'btn-back-india', container);
+      btn.type = 'button';
+      btn.innerHTML = `&larr; Back to India`;
+      btn.setAttribute('aria-label', 'Reset to National Map of India');
+      btn.style.backgroundColor = '#FAF6EC';
+      btn.style.color = '#2F5D3A';
+      btn.style.border = '2px solid #2F5D3A';
+      btn.style.borderRadius = '6px';
+      btn.style.padding = '7px 14px';
+      btn.style.fontWeight = '700';
+      btn.style.fontSize = '0.85rem';
+      btn.style.cursor = 'pointer';
+      btn.style.boxShadow = '0 2px 8px rgba(0,0,0,0.18)';
+      btn.style.transition = 'background-color 0.2s, transform 0.1s';
 
-    if (res.ok) {
-      const data = await res.json();
-      if (data && data.states && Object.keys(data.states).length > 0) {
-        stateTrendsData = { ...stateTrendsData, ...data.states };
-      }
-    }
-  } catch {
-    // API offline; continue with verified fallback
-  }
-
-  // Load GeoJSON Boundaries
-  try {
-    const geoRes = await fetch('assets/geo/india_states.geojson');
-    if (geoRes.ok) {
-      const geojson = await geoRes.json();
-      renderGeoJSONLayer(geojson);
-    }
-  } catch (err) {
-    console.warn('[TerraScope Map] Error loading india_states.geojson:', err);
-  }
-}
-
-/**
- * Renders GeoJSON state polygons with choropleth styling and interactivity
- */
-function renderGeoJSONLayer(geojson) {
-  if (geojsonLayer && mapInstance) {
-    mapInstance.removeLayer(geojsonLayer);
-  }
-
-  geojsonLayer = L.geoJSON(geojson, {
-    style: (feature) => getChoroplethStyle(feature),
-    onEachFeature: (feature, layer) => {
-      const stateName = feature.properties.name || feature.properties.NAME_1;
-      const trendInfo = stateTrendsData[stateName] || { class: 'no_data', symbol: 'n/a', slope_per_decade: 0 };
-
-      // Accessible tooltip with dual encoding
-      const symbol = trendInfo.symbol || '=';
-      const slopeText = trendInfo.slope_per_decade ? `${trendInfo.slope_per_decade > 0 ? '+' : ''}${trendInfo.slope_per_decade} °C/decade` : 'Baseline';
-      const friendlyClass = formatClassLabel(trendInfo.class);
-
-      layer.bindTooltip(`
-        <div style="font-family: var(--font-family-base); padding: 2px;">
-          <strong>${stateName}</strong><br>
-          <span style="font-weight: 700; color: ${CHOROPLETH_COLORS[trendInfo.class] || '#333'}">${symbol} ${friendlyClass}</span>
-          <span style="color: #666; font-size: 0.85em;">(${slopeText})</span>
-        </div>
-      `, { sticky: true, opacity: 0.95 });
-
-      layer.on({
-        mouseover: (e) => handleStateMouseOver(e, stateName),
-        mouseout: (e) => handleStateMouseOut(e),
-        click: (e) => handleStateClick(e, layer, stateName)
+      L.DomEvent.disableClickPropagation(container);
+      L.DomEvent.on(btn, 'mouseenter', () => {
+        btn.style.backgroundColor = '#EFE6D2';
       });
+      L.DomEvent.on(btn, 'mouseleave', () => {
+        btn.style.backgroundColor = '#FAF6EC';
+      });
+      L.DomEvent.on(btn, 'click', (e) => {
+        L.DomEvent.stopPropagation(e);
+        resetToNationalView();
+      });
+
+      return container;
     }
-  }).addTo(mapInstance);
+  });
+
+  backButtonControl = new BackControl();
+  backButtonControl.addTo(mapInstance);
 }
 
 /**
- * Computes choropleth polygon style based on classification
+ * Loads India state boundaries from assets and binds interaction events
  */
-function getChoroplethStyle(feature) {
-  const stateName = feature.properties.name || feature.properties.NAME_1;
-  const trend = stateTrendsData[stateName];
-  const trendClass = trend ? trend.class : 'no_data';
-  const fillColor = CHOROPLETH_COLORS[trendClass] || CHOROPLETH_COLORS.no_data;
+function loadIndiaGeoJSON() {
+  fetch('assets/geo/india_states.geojson')
+    .then(res => {
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    })
+    .then(data => {
+      stateLayersMap.clear();
+
+      geojsonLayer = L.geoJSON(data, {
+        style: getStateFeatureStyle,
+        onEachFeature: (feature, layer) => {
+          const stateName = feature.properties.name || feature.properties.NAME_1 || feature.properties.id;
+          const stateCode = feature.properties.id || feature.properties.state_code;
+
+          if (stateName) stateLayersMap.set(stateName.toLowerCase(), layer);
+          if (stateCode) stateLayersMap.set(stateCode.toLowerCase(), layer);
+
+          // Dual-encoding tooltip (Symbol + Direction + State)
+          layer.bindTooltip(createTooltipContent(stateName), {
+            sticky: true,
+            className: 'state-map-tooltip',
+            direction: 'auto'
+          });
+
+          layer.on({
+            mouseover: (e) => highlightFeature(e, stateName),
+            mouseout: (e) => resetFeatureHighlight(e, stateName),
+            click: (e) => {
+              L.DomEvent.stopPropagation(e);
+              handleStateClick(stateName, layer);
+            }
+          });
+        }
+      }).addTo(mapInstance);
+    })
+    .catch(err => {
+      console.warn('[TerraScope Map] Error loading india_states.geojson:', err);
+    });
+}
+
+/**
+ * Returns Leaflet styling for a state polygon feature
+ */
+function getStateFeatureStyle(feature) {
+  const stateName = feature?.properties?.name || feature?.properties?.NAME_1 || feature?.properties?.id;
+  const classification = getTrendClassification(stateName);
+  const baseColor = TREND_COLORS[classification] || TREND_COLORS.no_clear_change;
+
+  // If a state is selected and isolated, dim others
+  if (currentSelectedState) {
+    const isSelected = stateName && currentSelectedState.toLowerCase() === stateName.toLowerCase();
+    return {
+      fillColor: isSelected ? baseColor : '#FAF6EC',
+      fillOpacity: isSelected ? 0.9 : 0.06,
+      weight: isSelected ? 3.2 : 0.5,
+      color: isSelected ? '#1B2A4A' : '#9CAF88',
+      opacity: isSelected ? 1 : 0.4
+    };
+  }
 
   return {
-    fillColor: fillColor,
+    fillColor: baseColor,
+    fillOpacity: 0.85,
     weight: 1.5,
-    opacity: 1,
     color: '#FAF6EC',
-    fillOpacity: 0.85
+    opacity: 1
   };
+}
+
+/**
+ * Resolves trend classification key for a state
+ */
+function getTrendClassification(stateName) {
+  if (!stateName) return 'no_data';
+  const entry = activeChoroplethData[stateName] || activeChoroplethData[findClosestStateName(stateName)];
+  if (!entry) return 'no_data';
+  return entry.class || entry.direction_class || 'no_clear_change';
+}
+
+/**
+ * Builds dual-encoding tooltip content
+ */
+function createTooltipContent(stateName) {
+  const classification = getTrendClassification(stateName);
+  const symbol = TREND_SYMBOLS[classification] || '—';
+  const entry = activeChoroplethData[stateName] || activeChoroplethData[findClosestStateName(stateName)];
+  const slope = entry && entry.slope_per_decade != null ? ` (${entry.slope_per_decade > 0 ? '+' : ''}${entry.slope_per_decade}/dec)` : '';
+
+  return `
+    <div style="font-family: inherit; font-size: 0.85rem; padding: 2px 4px;">
+      <strong style="color: #1B2A4A;">${stateName}</strong><br/>
+      <span style="color: #2F5D3A; font-weight: 600;">${symbol} ${formatClassLabel(classification)}</span>${slope}
+    </div>
+  `;
 }
 
 /**
  * State hover highlight
  */
-function handleStateMouseOver(e, stateName) {
-  if (selectedStateName) return; // Do not alter hover when state is isolated
+function highlightFeature(e, stateName) {
+  if (currentSelectedState) return;
 
   const layer = e.target;
   layer.setStyle({
@@ -225,76 +345,75 @@ function handleStateMouseOver(e, stateName) {
   if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
     layer.bringToFront();
   }
+
+  // Refresh tooltip
+  layer.setTooltipContent(createTooltipContent(stateName));
 }
 
 /**
  * State hover reset
  */
-function handleStateMouseOut(e) {
-  if (selectedStateName) return;
+function resetFeatureHighlight(e, stateName) {
+  if (currentSelectedState) return;
   if (geojsonLayer) {
     geojsonLayer.resetStyle(e.target);
   }
 }
 
 /**
- * Handles click on a state polygon: zooms and isolates state
+ * Handles click on a state polygon
  */
-function handleStateClick(e, layer, stateName) {
-  if (e && e.originalEvent) {
-    L.DomEvent.stopPropagation(e);
+function handleStateClick(stateName, layer) {
+  selectAndIsolateState(stateName, layer);
+
+  if (onStateClickCallback) {
+    onStateClickCallback(stateName);
   }
-  isolateAndZoomState(layer, stateName);
+
+  loadStateAnalysis(stateName);
 }
 
 /**
- * Isolates a state polygon, dims all others, and zooms
+ * Selects and isolates a state on the map
  */
-function isolateAndZoomState(layer, stateName) {
-  if (!mapInstance || !geojsonLayer || !layer) return;
+function selectAndIsolateState(stateName, layer) {
+  currentSelectedState = stateName;
 
-  selectedStateName = stateName;
-
-  // 1. Zoom to state polygon bounds (Section 4.3)
-  mapInstance.fitBounds(layer.getBounds(), {
-    padding: [30, 30],
-    maxZoom: 8,
-    animate: true,
-    duration: 0.75
-  });
-
-  // 2. Dim non-selected states (fillOpacity: 0.05, weight: 0.5)
-  geojsonLayer.eachLayer((l) => {
-    const lName = l.feature.properties.name || l.feature.properties.NAME_1;
-    if (lName === stateName) {
-      l.setStyle({
-        weight: 3.2,
-        color: '#2F5D3A',
-        fillOpacity: 0.9
-      });
-      if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
-        l.bringToFront();
-      }
-    } else {
-      l.setStyle({
-        fillOpacity: 0.06,
-        weight: 0.5,
-        color: '#9CAF88'
-      });
-    }
-  });
-
-  // 3. Show floating "< Back to India" button
+  // Show floating Back button (DOM element + Leaflet control)
   const backBtn = document.getElementById('btn-back-to-india');
   if (backBtn) {
     backBtn.classList.remove('hidden');
   }
-
-  // 4. Trigger state selection callback & load analysis
-  if (onStateSelectedCallback) {
-    onStateSelectedCallback(stateName);
+  if (backButtonControl && backButtonControl.getContainer()) {
+    backButtonControl.getContainer().style.display = 'block';
   }
-  loadStateAnalysis(stateName);
+
+  // Update styles for all layers
+  if (geojsonLayer) {
+    geojsonLayer.eachLayer((l) => {
+      l.setStyle(getStateFeatureStyle(l.feature));
+      const lName = l.feature?.properties?.name || l.feature?.properties?.NAME_1;
+      if (lName && lName.toLowerCase() === stateName.toLowerCase()) {
+        if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+          l.bringToFront();
+        }
+      }
+    });
+  }
+
+  // Zoom to polygon bounds
+  if (layer && layer.getBounds) {
+    try {
+      mapInstance.fitBounds(layer.getBounds(), {
+        padding: [30, 30],
+        maxZoom: 8,
+        animate: true,
+        duration: 0.75
+      });
+    } catch {
+      // Bounds fallback
+    }
+  }
 }
 
 /**
@@ -302,50 +421,123 @@ function isolateAndZoomState(layer, stateName) {
  * @param {string} stateName
  */
 export function zoomToState(stateName) {
-  if (!geojsonLayer || !mapInstance) {
-    console.warn('[TerraScope Map] GeoJSON layer not ready for zoom.');
-    return;
+  if (!stateName || !mapInstance) return;
+
+  const norm = stateName.toLowerCase().trim();
+  let layer = stateLayersMap.get(norm);
+
+  if (!layer && geojsonLayer) {
+    geojsonLayer.eachLayer((l) => {
+      const name = l.feature?.properties?.name || l.feature?.properties?.NAME_1;
+      if (name && name.toLowerCase() === norm) {
+        layer = l;
+      }
+    });
   }
 
-  let targetLayer = null;
-  geojsonLayer.eachLayer((layer) => {
-    const name = layer.feature.properties.name || layer.feature.properties.NAME_1;
-    if (name.toLowerCase() === stateName.toLowerCase()) {
-      targetLayer = layer;
-    }
-  });
-
-  if (targetLayer) {
-    isolateAndZoomState(targetLayer, stateName);
+  if (layer) {
+    selectAndIsolateState(stateName, layer);
   } else {
-    console.log(`[TerraScope Map] State "${stateName}" not found in current GeoJSON.`);
+    // Check known state centroid fallback
+    const coords = STATE_CENTROIDS[stateName] || STATE_CENTROIDS[findClosestStateName(stateName)];
+    if (coords) {
+      currentSelectedState = stateName;
+      const backBtn = document.getElementById('btn-back-to-india');
+      if (backBtn) backBtn.classList.remove('hidden');
+      if (backButtonControl && backButtonControl.getContainer()) {
+        backButtonControl.getContainer().style.display = 'block';
+      }
+      mapInstance.flyTo(coords, 7, { animate: true, duration: 0.8 });
+    }
   }
 }
 
 /**
- * Reset map to full national view of India
+ * Resets map to default national view of India and restores full choropleth colors
  */
 export function resetToNationalView() {
-  if (!mapInstance || !geojsonLayer) return;
+  currentSelectedState = null;
 
-  selectedStateName = null;
+  // Hide Back button (DOM element + Leaflet control)
+  const backBtn = document.getElementById('btn-back-to-india');
+  if (backBtn) {
+    backBtn.classList.add('hidden');
+  }
+  if (backButtonControl && backButtonControl.getContainer()) {
+    backButtonControl.getContainer().style.display = 'none';
+  }
 
-  // Reset zoom to India centroid
+  // Reset polygon styles
+  if (geojsonLayer) {
+    geojsonLayer.eachLayer((l) => {
+      geojsonLayer.resetStyle(l);
+    });
+  }
+
+  // Fly to India center
   mapInstance.setView(INDIA_CENTER, DEFAULT_ZOOM, {
     animate: true,
     duration: 0.75
   });
 
-  // Restore full choropleth styles on all polygons
-  geojsonLayer.eachLayer((layer) => {
-    geojsonLayer.resetStyle(layer);
-  });
-
-  // Hide "< Back to India" button
-  const backBtn = document.getElementById('btn-back-to-india');
-  if (backBtn) {
-    backBtn.classList.add('hidden');
+  if (onResetCallback) {
+    onResetCallback();
   }
+}
+
+/**
+ * Updates the choropleth data mapping and re-renders polygon styles
+ * @param {Object} trendsData - Map of state name/code to classification object
+ */
+export function setChoroplethData(trendsData) {
+  activeChoroplethData = trendsData || {};
+  if (geojsonLayer) {
+    geojsonLayer.eachLayer((layer) => {
+      layer.setStyle(getStateFeatureStyle(layer.feature));
+    });
+  }
+}
+
+/**
+ * Highlights map polygons that match a specific legend classification
+ * @param {string} classificationKey
+ */
+export function filterByLegend(classificationKey) {
+  if (currentSelectedState || !geojsonLayer) return;
+
+  geojsonLayer.eachLayer((layer) => {
+    const stateName = layer.feature?.properties?.name || layer.feature?.properties?.NAME_1;
+    const currentClass = getTrendClassification(stateName);
+
+    if (currentClass === classificationKey) {
+      layer.setStyle({
+        fillColor: TREND_COLORS[classificationKey] || '#2F5D3A',
+        fillOpacity: 0.95,
+        weight: 3,
+        color: '#2F5D3A'
+      });
+      if (!L.Browser.ie && !L.Browser.opera) {
+        layer.bringToFront();
+      }
+    } else {
+      layer.setStyle({
+        fillColor: '#D9D2BF',
+        fillOpacity: 0.08,
+        weight: 0.5,
+        color: '#B0A894'
+      });
+    }
+  });
+}
+
+/**
+ * Resets legend hover filter back to active choropleth view
+ */
+export function resetLegendFilter() {
+  if (currentSelectedState || !geojsonLayer) return;
+  geojsonLayer.eachLayer((layer) => {
+    layer.setStyle(getStateFeatureStyle(layer.feature));
+  });
 }
 
 /**
@@ -358,34 +550,13 @@ function setupLegendInteractivity() {
     const targetClass = item.getAttribute('data-class');
 
     item.addEventListener('mouseenter', () => {
-      if (selectedStateName || !geojsonLayer) return;
-
-      geojsonLayer.eachLayer((layer) => {
-        const sName = layer.feature.properties.name || layer.feature.properties.NAME_1;
-        const trend = stateTrendsData[sName];
-        const itemClass = trend ? trend.class : 'no_data';
-
-        if (itemClass === targetClass) {
-          layer.setStyle({
-            weight: 3,
-            color: '#2F5D3A',
-            fillOpacity: 0.95
-          });
-        } else {
-          layer.setStyle({
-            fillOpacity: 0.08,
-            weight: 0.5,
-            color: '#D9D2BF'
-          });
-        }
-      });
+      if (currentSelectedState || !geojsonLayer) return;
+      filterByLegend(targetClass);
     });
 
     item.addEventListener('mouseleave', () => {
-      if (selectedStateName || !geojsonLayer) return;
-      geojsonLayer.eachLayer((layer) => {
-        geojsonLayer.resetStyle(layer);
-      });
+      if (currentSelectedState || !geojsonLayer) return;
+      resetLegendFilter();
     });
   });
 }
@@ -393,4 +564,15 @@ function setupLegendInteractivity() {
 function formatClassLabel(className) {
   if (!className) return 'No clear change';
   return className.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+
+function findClosestStateName(input) {
+  if (!input) return 'Kerala';
+  const lower = input.toLowerCase();
+  for (const name of Object.keys(STATE_CENTROIDS)) {
+    if (name.toLowerCase().includes(lower) || lower.includes(name.toLowerCase())) {
+      return name;
+    }
+  }
+  return 'Kerala';
 }

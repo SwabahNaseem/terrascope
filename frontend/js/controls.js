@@ -1,6 +1,7 @@
 /**
  * TerraScope Controls & Parameter Management Module
- * Coordinates variable multi-select, date ranges, aggregation interval, report generation, and API triggers.
+ * Coordinates environmental variable multi-select, guardrails, date ranges,
+ * aggregation interval, compare mode, report generation, and API triggers.
  * Matches Technical Specification Section 3.3
  */
 
@@ -72,35 +73,42 @@ export const KERALA_SAMPLE_DATA = {
 };
 
 let currentActiveState = "Kerala";
+let isCurrentlyLoading = false;
 
 /**
- * Initialize controls event listeners, guardrails, and triggers
- * @param {Object} callbacks - { onTrendRequested }
+ * Initialize Control Inputs, Guardrails, and Action Handlers
+ * @param {Object} callbacks
+ * @param {Function} callbacks.onTrendRequested - Triggered on "Show Trend" button click
+ * @param {Function} [callbacks.onVariableChange] - Triggered when variable selection changes
+ * @param {Function} [callbacks.onCompareToggle] - Triggered when compare mode is toggled
  */
-export function initControls({ onTrendRequested } = {}) {
-  setupVariableGuardrails();
+export function initControls({ onTrendRequested, onVariableChange, onCompareToggle } = {}) {
+  setupVariableGuardrails(onVariableChange);
   setupDateConstraints();
+  ensureCompareModeToggle(onCompareToggle);
   setupShowTrendButton(onTrendRequested);
   setupReportDownload();
   setupAboutModal();
   checkBackendHealth();
-
-  // Foundation milestone trigger: Render initial state analysis for Kerala
-  loadStateAnalysis("Kerala");
 }
 
 /**
  * Enforces guardrail: At least one variable checkbox must remain checked
  */
-function setupVariableGuardrails() {
+function setupVariableGuardrails(onVariableChange) {
   const checkboxes = document.querySelectorAll('input[name="variable"]');
-  checkboxes.forEach(cb => {
+  checkboxes.forEach((cb) => {
     cb.addEventListener('change', (e) => {
       const checkedBoxes = document.querySelectorAll('input[name="variable"]:checked');
       if (checkedBoxes.length === 0) {
         // Prevent unchecking the last remaining variable
         e.target.checked = true;
+        flashWarning(e.target.closest('label'), 'At least one environmental variable must remain selected.');
         showNotificationToast('At least one variable must remain selected.');
+      }
+
+      if (onVariableChange) {
+        onVariableChange(getSelectedVariables());
       }
     });
   });
@@ -111,17 +119,25 @@ function setupVariableGuardrails() {
  */
 function setupDateConstraints() {
   const startInput = document.getElementById('start-year-select');
-  if (!startInput) return;
+  const endInput = document.getElementById('end-year-select');
 
-  const minYear = 1981;
-  const maxYear = 2024;
+  if (startInput) {
+    const minYear = 1981;
+    const maxYear = 2024;
+    startInput.setAttribute('min', String(minYear));
+    startInput.setAttribute('max', String(maxYear));
 
-  startInput.addEventListener('change', () => {
-    let val = parseInt(startInput.value, 10);
-    if (isNaN(val) || val < minYear) val = minYear;
-    if (val > maxYear) val = maxYear;
-    startInput.value = val;
-  });
+    startInput.addEventListener('change', () => {
+      let val = parseInt(startInput.value, 10);
+      if (isNaN(val) || val < minYear) val = minYear;
+      if (val > maxYear) val = maxYear;
+      startInput.value = val;
+    });
+  }
+
+  if (endInput && !endInput.value) {
+    endInput.value = 'Latest (2025)';
+  }
 }
 
 /**
@@ -131,22 +147,12 @@ function setupShowTrendButton(onTrendRequested) {
   const btn = document.getElementById('btn-show-trend');
   if (!btn) return;
 
-  btn.addEventListener('click', async () => {
-    // Show spinner in button
-    btn.disabled = true;
-    const originalText = btn.innerHTML;
-    btn.innerHTML = `<span class="spinner"></span> <span>Analyzing...</span>`;
-
-    try {
-      if (onTrendRequested) {
-        onTrendRequested();
-      }
-      await loadStateAnalysis(currentActiveState);
-    } catch (err) {
-      console.warn('[TerraScope Controls] Analysis query notice:', err);
-    } finally {
-      btn.disabled = false;
-      btn.innerHTML = originalText;
+  btn.addEventListener('click', () => {
+    if (isCurrentlyLoading) return;
+    if (onTrendRequested) {
+      onTrendRequested(getSelectedOptions());
+    } else {
+      loadStateAnalysis(currentActiveState);
     }
   });
 }
@@ -156,19 +162,117 @@ function setupShowTrendButton(onTrendRequested) {
  * @returns {Object} Selected options
  */
 export function getSelectedOptions() {
-  const variableCheckboxes = document.querySelectorAll('input[name="variable"]:checked');
-  const selectedVariables = Array.from(variableCheckboxes).map(cb => cb.value);
+  const selectedVariables = getSelectedVariables();
+  const startInput = document.getElementById('start-year-select');
+  const aggregationSelect = document.getElementById('aggregation-select');
+  const compareToggle = document.getElementById('compare-mode-toggle');
 
-  const startYear = document.getElementById('start-year-select')?.value || '2000';
-  const endYear = '2025';
-  const aggregation = document.getElementById('aggregation-select')?.value || 'yearly';
+  let startYear = parseInt(startInput?.value || '2000', 10);
+  if (isNaN(startYear) || startYear < 1981) startYear = 1981;
+  if (startYear > 2025) startYear = 2025;
+
+  const aggregation = aggregationSelect?.value || 'yearly';
+  const compareMode = compareToggle ? compareToggle.checked : false;
 
   return {
     variables: selectedVariables.length > 0 ? selectedVariables : ['temperature'],
-    startYear: parseInt(startYear, 10),
-    endYear: endYear,
-    aggregation: aggregation
+    startYear: startYear,
+    endYear: 'latest',
+    aggregation: aggregation,
+    compareMode: compareMode
   };
+}
+
+/**
+ * Gets array of checked variable names
+ * @returns {string[]}
+ */
+export function getSelectedVariables() {
+  const checkboxes = document.querySelectorAll('input[name="variable"]:checked');
+  return Array.from(checkboxes).map(cb => cb.value);
+}
+
+/**
+ * Updates loading state of the Show Trend button
+ * @param {boolean} isLoading
+ */
+export function setControlsLoading(isLoading) {
+  isCurrentlyLoading = isLoading;
+  const btnShowTrend = document.getElementById('btn-show-trend');
+  if (!btnShowTrend) return;
+
+  if (isLoading) {
+    btnShowTrend.disabled = true;
+    btnShowTrend.style.opacity = '0.75';
+    btnShowTrend.style.cursor = 'not-allowed';
+    btnShowTrend.innerHTML = `
+      <span style="display: inline-block; width: 14px; height: 14px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 6px; vertical-align: middle;"></span>
+      Analyzing...
+    `;
+
+    // Ensure CSS animation exists
+    if (!document.getElementById('spin-keyframes-style')) {
+      const style = document.createElement('style');
+      style.id = 'spin-keyframes-style';
+      style.textContent = `@keyframes spin { to { transform: rotate(360deg); } }`;
+      document.head.appendChild(style);
+    }
+  } else {
+    btnShowTrend.disabled = false;
+    btnShowTrend.style.opacity = '1';
+    btnShowTrend.style.cursor = 'pointer';
+    btnShowTrend.innerHTML = 'Show Trend';
+  }
+}
+
+/**
+ * Injects a Compare Shapes checkbox if not already present in the sidebar controls
+ */
+function ensureCompareModeToggle(onCompareToggle) {
+  if (document.getElementById('compare-mode-toggle')) return;
+
+  const sidebar = document.querySelector('.sidebar-controls');
+  const btnShowTrend = document.getElementById('btn-show-trend');
+
+  if (sidebar && btnShowTrend) {
+    const compareGroup = document.createElement('div');
+    compareGroup.className = 'control-group';
+    compareGroup.style.marginTop = '4px';
+    compareGroup.innerHTML = `
+      <label class="checkbox-item" style="cursor: pointer;" title="Normalize curves to 0-1 scale to compare timing and trajectory shapes">
+        <input type="checkbox" id="compare-mode-toggle">
+        <span>Compare Shapes (0–1 scale)</span>
+      </label>
+    `;
+
+    sidebar.insertBefore(compareGroup, btnShowTrend);
+
+    const toggle = compareGroup.querySelector('#compare-mode-toggle');
+    if (toggle && onCompareToggle) {
+      toggle.addEventListener('change', (e) => {
+        onCompareToggle(e.target.checked);
+      });
+    }
+  }
+}
+
+/**
+ * Visual micro-interaction when user violates guardrail
+ */
+export function flashWarning(element, message) {
+  if (!element) return;
+  element.style.transition = 'transform 0.1s, color 0.2s';
+  element.style.transform = 'translateX(4px)';
+  element.style.color = 'var(--accent, #C8643B)';
+
+  setTimeout(() => {
+    element.style.transform = 'translateX(-4px)';
+  }, 100);
+
+  setTimeout(() => {
+    element.style.transform = 'translateX(0)';
+    element.style.color = '';
+  }, 250);
 }
 
 /**
@@ -187,44 +291,27 @@ export async function loadStateAnalysis(stateName = "Kerala") {
 
   // Try live REST API
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 2000);
-    const response = await fetch('/api/analysis', {
+    const res = await fetch('/api/analysis', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        location: { type: 'state', name: stateName },
+        location: { type: "state", name: stateName },
         variables: options.variables,
-        start_year: options.startYear,
-        end_year: options.endYear,
+        start_date: `${options.startYear}-01-01`,
+        end_date: "latest",
         aggregation: options.aggregation
-      }),
-      signal: controller.signal
+      })
     });
-    clearTimeout(timeoutId);
 
-    if (response.ok) {
-      analysisPayload = await response.json();
+    if (res.ok) {
+      analysisPayload = await res.json();
     }
-  } catch {
-    // Backend offline; continue to fallback
+  } catch (err) {
+    console.warn('[TerraScope Controls] Live analysis fetch failed, falling back to embedded sample:', err);
   }
 
-  // Fallback to sample data
-  if (!analysisPayload || !analysisPayload.results) {
-    // Attempt local sample file fetch
-    try {
-      const res = await fetch('data/sample/kerala_temperature_sample.json');
-      if (res.ok) {
-        analysisPayload = await res.json();
-      }
-    } catch {
-      // Continue to embedded fallback
-    }
-  }
-
-  // Embedded verified fallback
-  if (!analysisPayload || !analysisPayload.results) {
+  // Resilient fallback to sample data if offline
+  if (!analysisPayload) {
     analysisPayload = JSON.parse(JSON.stringify(KERALA_SAMPLE_DATA));
     analysisPayload.location.name = stateName;
   }
@@ -255,7 +342,7 @@ export async function loadStateAnalysis(stateName = "Kerala") {
       summaryBadge.textContent = 'Statistically Significant (p < 0.05)';
     } else {
       summaryBadge.className = 'badge-significance variation';
-      summaryBadge.textContent = 'Normal Variation (p \u2265 0.05)';
+      summaryBadge.textContent = 'Normal Variation (p ≥ 0.05)';
     }
   }
 
@@ -304,7 +391,7 @@ ${text}
 - **Monotonic Trend Test**: Non-parametric Mann-Kendall Test
 - **Slope Estimator**: Sen's Non-Parametric Median Slope
 - **Primary Data Source**: NASA POWER Project (MERRA-2 assimilation, 0.5° spatial grid)
-- **Significance Criterion**: \u03b1 = 0.05 (Two-tailed)
+- **Significance Criterion**: α = 0.05 (Two-tailed)
 
 ---
 
@@ -378,6 +465,6 @@ async function checkBackendHealth() {
 /**
  * Simple toast alert message
  */
-function showNotificationToast(msg) {
+export function showNotificationToast(msg) {
   console.log(`[TerraScope Toast] ${msg}`);
 }
