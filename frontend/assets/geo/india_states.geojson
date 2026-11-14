@@ -14,7 +14,8 @@
         "id": "IN-AP",
         "name": "Andhra Pradesh",
         "state_code": "AP",
-        "type": "State"
+        "type": "State",
+        "NAME_1": "Andhra Pradesh"
       },
       "geometry": {
         "type": "Polygon",
@@ -98,7 +99,8 @@
         "id": "IN-AR",
         "name": "Arunachal Pradesh",
         "state_code": "AR",
-        "type": "State"
+        "type": "State",
+        "NAME_1": "Arunachal Pradesh"
       },
       "geometry": {
         "type": "Polygon",
@@ -166,7 +168,8 @@
         "id": "IN-AS",
         "name": "Assam",
         "state_code": "AS",
-        "type": "State"
+        "type": "State",
+        "NAME_1": "Assam"
       },
       "geometry": {
         "type": "Polygon",
@@ -242,7 +245,8 @@
         "id": "IN-BR",
         "name": "Bihar",
         "state_code": "BR",
-        "type": "State"
+        "type": "State",
+        "NAME_1": "Bihar"
       },
       "geometry": {
         "type": "Polygon",
@@ -302,7 +306,8 @@
         "id": "IN-CT",
         "name": "Chhattisgarh",
         "state_code": "CT",
-        "type": "State"
+        "type": "State",
+        "NAME_1": "Chhattisgarh"
       },
       "geometry": {
         "type": "Polygon",
@@ -362,7 +367,8 @@
         "id": "IN-GA",
         "name": "Goa",
         "state_code": "GA",
-        "type": "State"
+        "type": "State",
+        "NAME_1": "Goa"
       },
       "geometry": {
         "type": "Polygon",
@@ -406,7 +412,8 @@
         "id": "IN-GJ",
         "name": "Gujarat",
         "state_code": "GJ",
-        "type": "State"
+        "type": "State",
+        "NAME_1": "Gujarat"
       },
       "geometry": {
         "type": "Polygon",
@@ -470,7 +477,8 @@
         "id": "IN-HR",
         "name": "Haryana",
         "state_code": "HR",
-        "type": "State"
+        "type": "State",
+        "NAME_1": "Haryana"
       },
       "geometry": {
         "type": "Polygon",
@@ -522,7 +530,8 @@
         "id": "IN-HP",
         "name": "Himachal Pradesh",
         "state_code": "HP",
-        "type": "State"
+        "type": "State",
+        "NAME_1": "Himachal Pradesh"
       },
       "geometry": {
         "type": "Polygon",
@@ -570,7 +579,8 @@
         "id": "IN-JH",
         "name": "Jharkhand",
         "state_code": "JH",
-        "type": "State"
+        "type": "State",
+        "NAME_1": "Jharkhand"
       },
       "geometry": {
         "type": "Polygon",
@@ -626,7 +636,8 @@
         "id": "IN-KA",
         "name": "Karnataka",
         "state_code": "KA",
-        "type": "State"
+        "type": "State",
+        "NAME_1": "Karnataka"
       },
       "geometry": {
         "type": "Polygon",
@@ -670,7 +681,8 @@
         "id": "IN-KL",
         "name": "Kerala",
         "state_code": "KL",
-        "type": "State"
+        "type": "State",
+        "NAME_1": "Kerala"
       },
       "geometry": {
         "type": "Polygon",
@@ -730,7 +742,8 @@
         "id": "IN-MP",
         "name": "Madhya Pradesh",
         "state_code": "MP",
-        "type": "State"
+        "type": "State",
+        "NAME_1": "Madhya Pradesh"
       },
       "geometry": {
         "type": "Polygon",
@@ -794,7 +807,8 @@
         "id": "IN-MH",
         "name": "Maharashtra",
         "state_code": "MH",
-        "type": "State"
+        "type": "State",
+        "NAME_1": "Maharashtra"
       },
       "geometry": {
         "type": "Polygon",
@@ -854,7 +868,8 @@
         "id": "IN-MN",
         "name": "Manipur",
         "state_code": "MN",
-        "type": "State"
+        "type": "State",
+        "NAME_1": "Manipur"
       },
       "geometry": {
         "type": "Polygon",
@@ -898,7 +913,8 @@
         "id": "IN-ML",
         "name": "Meghalaya",
         "state_code": "ML",
-        "type": "State"
+        "type": "State",
+        "NAME_1": "Meghalaya"
       },
       "geometry": {
         "type": "Polygon",
@@ -942,7 +958,8 @@
         "id": "IN-MZ",
         "name": "Mizoram",
         "state_code": "MZ",
-        "type": "State"
+        "type": "State",
+        "NAME_1": "Mizoram"
       },
       "geometry": {
         "type": "Polygon",
@@ -986,7 +1003,8 @@
         "id": "IN-NL",
         "name": "Nagaland",
         "state_code": "NL",
-        "type": "State"
+        "type": "State",
+        "NAME_1": "Nagaland"
       },
       "geometry": {
         "type": "Polygon",
@@ -1030,7 +1048,8 @@
         "id": "IN-OD",
         "name": "Odisha",
         "state_code": "OD",
-        "type": "State"
+        "type": "State",
+        "NAME_1": "Odisha"
       },
       "geometry": {
         "type": "Polygon",
@@ -1090,7 +1109,8 @@
         "id": "IN-PB",
         "name": "Punjab",
         "state_code": "PB",
-        "type": "State"
+        "type": "State",
+        "NAME_1": "Punjab"
       },
       "geometry": {
         "type": "Polygon",
@@ -1138,7 +1158,8 @@
         "id": "IN-RJ",
         "name": "Rajasthan",
         "state_code": "RJ",
-        "type": "State"
+        "type": "State",
+        "NAME_1": "Rajasthan"
       },
       "geometry": {
         "type": "Polygon",
@@ -1202,7 +1223,8 @@
         "id": "IN-SK",
         "name": "Sikkim",
         "state_code": "SK",
-        "type": "State"
+        "type": "State",
+        "NAME_1": "Sikkim"
       },
       "geometry": {
         "type": "Polygon",
@@ -1242,7 +1264,8 @@
         "id": "IN-TN",
         "name": "Tamil Nadu",
         "state_code": "TN",
-        "type": "State"
+        "type": "State",
+        "NAME_1": "Tamil Nadu"
       },
       "geometry": {
         "type": "Polygon",
@@ -1294,7 +1317,8 @@
         "id": "IN-TS",
         "name": "Telangana",
         "state_code": "TS",
-        "type": "State"
+        "type": "State",
+        "NAME_1": "Telangana"
       },
       "geometry": {
         "type": "Polygon",
@@ -1342,7 +1366,8 @@
         "id": "IN-TR",
         "name": "Tripura",
         "state_code": "TR",
-        "type": "State"
+        "type": "State",
+        "NAME_1": "Tripura"
       },
       "geometry": {
         "type": "Polygon",
@@ -1382,7 +1407,8 @@
         "id": "IN-UP",
         "name": "Uttar Pradesh",
         "state_code": "UP",
-        "type": "State"
+        "type": "State",
+        "NAME_1": "Uttar Pradesh"
       },
       "geometry": {
         "type": "Polygon",
@@ -1450,7 +1476,8 @@
         "id": "IN-UK",
         "name": "Uttarakhand",
         "state_code": "UK",
-        "type": "State"
+        "type": "State",
+        "NAME_1": "Uttarakhand"
       },
       "geometry": {
         "type": "Polygon",
@@ -1498,7 +1525,8 @@
         "id": "IN-WB",
         "name": "West Bengal",
         "state_code": "WB",
-        "type": "State"
+        "type": "State",
+        "NAME_1": "West Bengal"
       },
       "geometry": {
         "type": "Polygon",
@@ -1562,7 +1590,8 @@
         "id": "IN-AN",
         "name": "Andaman and Nicobar Islands",
         "state_code": "AN",
-        "type": "Union Territory"
+        "type": "Union Territory",
+        "NAME_1": "Andaman and Nicobar Islands"
       },
       "geometry": {
         "type": "MultiPolygon",
@@ -1620,7 +1649,8 @@
         "id": "IN-CH",
         "name": "Chandigarh",
         "state_code": "CH",
-        "type": "Union Territory"
+        "type": "Union Territory",
+        "NAME_1": "Chandigarh"
       },
       "geometry": {
         "type": "Polygon",
@@ -1656,7 +1686,8 @@
         "id": "IN-DD",
         "name": "Dadra and Nagar Haveli and Daman and Diu",
         "state_code": "DD",
-        "type": "Union Territory"
+        "type": "Union Territory",
+        "NAME_1": "Dadra and Nagar Haveli and Daman and Diu"
       },
       "geometry": {
         "type": "MultiPolygon",
@@ -1742,7 +1773,8 @@
         "id": "IN-DL",
         "name": "Delhi",
         "state_code": "DL",
-        "type": "Union Territory"
+        "type": "Union Territory",
+        "NAME_1": "Delhi"
       },
       "geometry": {
         "type": "Polygon",
@@ -1782,7 +1814,8 @@
         "id": "IN-JK",
         "name": "Jammu and Kashmir",
         "state_code": "JK",
-        "type": "Union Territory"
+        "type": "Union Territory",
+        "NAME_1": "Jammu and Kashmir"
       },
       "geometry": {
         "type": "Polygon",
@@ -1834,7 +1867,8 @@
         "id": "IN-LA",
         "name": "Ladakh",
         "state_code": "LA",
-        "type": "Union Territory"
+        "type": "Union Territory",
+        "NAME_1": "Ladakh"
       },
       "geometry": {
         "type": "Polygon",
@@ -1886,7 +1920,8 @@
         "id": "IN-LD",
         "name": "Lakshadweep",
         "state_code": "LD",
-        "type": "Union Territory"
+        "type": "Union Territory",
+        "NAME_1": "Lakshadweep"
       },
       "geometry": {
         "type": "MultiPolygon",
@@ -1972,7 +2007,8 @@
         "id": "IN-PY",
         "name": "Puducherry",
         "state_code": "PY",
-        "type": "Union Territory"
+        "type": "Union Territory",
+        "NAME_1": "Puducherry"
       },
       "geometry": {
         "type": "MultiPolygon",

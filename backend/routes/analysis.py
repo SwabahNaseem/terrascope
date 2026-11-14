@@ -1,12 +1,7 @@
 """
 Analysis Routes Blueprint
-<<<<<<< Updated upstream
-Handles environmental variable listing and multi-variable time series trend analysis.
-Implements Mann-Kendall test, Sen's slope estimator, and plain-language narrative synthesis.
-=======
 Handles environmental variable listing and multi-variable time series trend analysis
 conforming to NASA POWER and SWOT Ingestion Standards.
->>>>>>> Stashed changes
 """
 
 import math
@@ -196,12 +191,8 @@ def build_plain_language_summary(
 @analysis_bp.route("/variables", methods=["GET"])
 def get_variables():
     """
-<<<<<<< Updated upstream
-    Returns supported environmental variables, unit standards, and source attributions.
-=======
     Returns supported environmental variables, unit standards, and source attributions
     conforming strictly to Data Sources & Ingestion Standards.
->>>>>>> Stashed changes
     """
     specs = NasaPowerService.PARAMETER_SPECIFICATIONS
     swot_status = SwotService.get_phase_1_status()
@@ -209,13 +200,6 @@ def get_variables():
     supported_variables = [
         {
             "id": "temperature",
-<<<<<<< Updated upstream
-            "name": "Air Temperature",
-            "parameter_code": "T2M",
-            "unit": "°C",
-            "rate_unit": "°C/decade",
-            "source": "NASA POWER (T2M)",
-=======
             "name": specs["temperature"]["friendly_name"],
             "parameter_code": specs["temperature"]["code"],
             "native_units": specs["temperature"]["native_units"],
@@ -223,20 +207,12 @@ def get_variables():
             "source": "NASA POWER API",
             "spatial_resolution": "0.5° x 0.5°",
             "coverage": "1981 to present (lagged 2-3 months)",
->>>>>>> Stashed changes
             "earliest_year": 1981,
             "notes": specs["temperature"]["notes"],
             "description": "Daily mean near-surface air temperature at 2 meters above ground level"
         },
         {
             "id": "precipitation",
-<<<<<<< Updated upstream
-            "name": "Precipitation / Rainfall",
-            "parameter_code": "PRECTOTCORR",
-            "unit": "mm",
-            "rate_unit": "mm/decade",
-            "source": "NASA POWER (PRECTOTCORR)",
-=======
             "name": specs["precipitation"]["friendly_name"],
             "parameter_code": specs["precipitation"]["code"],
             "native_units": specs["precipitation"]["native_units"],
@@ -244,20 +220,11 @@ def get_variables():
             "source": "NASA POWER API",
             "spatial_resolution": "0.5° x 0.5°",
             "coverage": "1981 to present (lagged 2-3 months)",
->>>>>>> Stashed changes
             "earliest_year": 1981,
             "notes": specs["precipitation"]["notes"],
             "description": "Precipitation corrected for surface model dynamics"
         },
         {
-<<<<<<< Updated upstream
-            "id": "soil_moisture",
-            "name": "Surface Soil Wetness",
-            "parameter_code": "GWETTOP",
-            "unit": "fraction (0-1)",
-            "rate_unit": "fraction/decade",
-            "source": "NASA POWER (GWETTOP)",
-=======
             "id": "soil_moisture_top",
             "name": specs["soil_moisture_top"]["friendly_name"],
             "parameter_code": specs["soil_moisture_top"]["code"],
@@ -266,7 +233,6 @@ def get_variables():
             "source": "NASA POWER API",
             "spatial_resolution": "0.5° x 0.5°",
             "coverage": "1981 to present (lagged 2-3 months)",
->>>>>>> Stashed changes
             "earliest_year": 1981,
             "notes": specs["soil_moisture_top"]["notes"],
             "description": "Surface soil wetness ratio (0–5 cm)"
@@ -288,17 +254,11 @@ def get_variables():
             "id": "water_surface",
             "name": "Water Surface Elevation & Extent Proxy",
             "parameter_code": "SWOT_PROXY",
-<<<<<<< Updated upstream
-            "unit": "index",
-            "rate_unit": "index/decade",
-            "source": "SWOT / Model Proxy",
-=======
             "native_units": "meters / index",
             "display_units": "meters / index",
             "source": "Soil Wetness / GLDAS Runoff Proxy (SWOT in Future Phase)",
             "spatial_resolution": "Model Grid / Lake Vectors",
             "coverage": "Phase 1 Proxy (Historical) / SWOT (2022 onwards)",
->>>>>>> Stashed changes
             "earliest_year": 2022,
             "notes": swot_status["implementation_strategy"]["default_indicator"],
             "description": (
