@@ -1,13 +1,20 @@
 """
 Analysis Routes Blueprint
+<<<<<<< Updated upstream
 Handles environmental variable listing and multi-variable time series trend analysis.
 Implements Mann-Kendall test, Sen's slope estimator, and plain-language narrative synthesis.
+=======
+Handles environmental variable listing and multi-variable time series trend analysis
+conforming to NASA POWER and SWOT Ingestion Standards.
+>>>>>>> Stashed changes
 """
 
 import math
 import uuid
 from typing import List, Dict, Tuple, Any, Optional
 from flask import Blueprint, jsonify, request
+from backend.services.nasa_power import NasaPowerService
+from backend.services.swot import SwotService
 
 from backend.services.data_loader import DataLoaderService
 from backend.services.nasa_power import NasaPowerService
@@ -189,50 +196,120 @@ def build_plain_language_summary(
 @analysis_bp.route("/variables", methods=["GET"])
 def get_variables():
     """
+<<<<<<< Updated upstream
     Returns supported environmental variables, unit standards, and source attributions.
+=======
+    Returns supported environmental variables, unit standards, and source attributions
+    conforming strictly to Data Sources & Ingestion Standards.
+>>>>>>> Stashed changes
     """
+    specs = NasaPowerService.PARAMETER_SPECIFICATIONS
+    swot_status = SwotService.get_phase_1_status()
+
     supported_variables = [
         {
             "id": "temperature",
+<<<<<<< Updated upstream
             "name": "Air Temperature",
             "parameter_code": "T2M",
             "unit": "°C",
             "rate_unit": "°C/decade",
             "source": "NASA POWER (T2M)",
+=======
+            "name": specs["temperature"]["friendly_name"],
+            "parameter_code": specs["temperature"]["code"],
+            "native_units": specs["temperature"]["native_units"],
+            "display_units": specs["temperature"]["display_units"],
+            "source": "NASA POWER API",
+            "spatial_resolution": "0.5° x 0.5°",
+            "coverage": "1981 to present (lagged 2-3 months)",
+>>>>>>> Stashed changes
             "earliest_year": 1981,
-            "description": "Near-surface air temperature at 2 meters above ground level"
+            "notes": specs["temperature"]["notes"],
+            "description": "Daily mean near-surface air temperature at 2 meters above ground level"
         },
         {
             "id": "precipitation",
+<<<<<<< Updated upstream
             "name": "Precipitation / Rainfall",
             "parameter_code": "PRECTOTCORR",
             "unit": "mm",
             "rate_unit": "mm/decade",
             "source": "NASA POWER (PRECTOTCORR)",
+=======
+            "name": specs["precipitation"]["friendly_name"],
+            "parameter_code": specs["precipitation"]["code"],
+            "native_units": specs["precipitation"]["native_units"],
+            "display_units": specs["precipitation"]["display_units"],
+            "source": "NASA POWER API",
+            "spatial_resolution": "0.5° x 0.5°",
+            "coverage": "1981 to present (lagged 2-3 months)",
+>>>>>>> Stashed changes
             "earliest_year": 1981,
+            "notes": specs["precipitation"]["notes"],
             "description": "Precipitation corrected for surface model dynamics"
         },
         {
+<<<<<<< Updated upstream
             "id": "soil_moisture",
             "name": "Surface Soil Wetness",
             "parameter_code": "GWETTOP",
             "unit": "fraction (0-1)",
             "rate_unit": "fraction/decade",
             "source": "NASA POWER (GWETTOP)",
+=======
+            "id": "soil_moisture_top",
+            "name": specs["soil_moisture_top"]["friendly_name"],
+            "parameter_code": specs["soil_moisture_top"]["code"],
+            "native_units": specs["soil_moisture_top"]["native_units"],
+            "display_units": specs["soil_moisture_top"]["display_units"],
+            "source": "NASA POWER API",
+            "spatial_resolution": "0.5° x 0.5°",
+            "coverage": "1981 to present (lagged 2-3 months)",
+>>>>>>> Stashed changes
             "earliest_year": 1981,
-            "description": "Surface soil moisture fraction (0 = dry, 1 = saturated)"
+            "notes": specs["soil_moisture_top"]["notes"],
+            "description": "Surface soil wetness ratio (0–5 cm)"
+        },
+        {
+            "id": "soil_moisture_root",
+            "name": specs["soil_moisture_root"]["friendly_name"],
+            "parameter_code": specs["soil_moisture_root"]["code"],
+            "native_units": specs["soil_moisture_root"]["native_units"],
+            "display_units": specs["soil_moisture_root"]["display_units"],
+            "source": "NASA POWER API",
+            "spatial_resolution": "0.5° x 0.5°",
+            "coverage": "1981 to present (lagged 2-3 months)",
+            "earliest_year": 1981,
+            "notes": specs["soil_moisture_root"]["notes"],
+            "description": "Root zone soil wetness ratio (0–100 cm)"
         },
         {
             "id": "water_surface",
-            "name": "Surface Water Indicator",
+            "name": "Water Surface Elevation & Extent Proxy",
             "parameter_code": "SWOT_PROXY",
+<<<<<<< Updated upstream
             "unit": "index",
             "rate_unit": "index/decade",
             "source": "SWOT / Model Proxy",
+=======
+            "native_units": "meters / index",
+            "display_units": "meters / index",
+            "source": "Soil Wetness / GLDAS Runoff Proxy (SWOT in Future Phase)",
+            "spatial_resolution": "Model Grid / Lake Vectors",
+            "coverage": "Phase 1 Proxy (Historical) / SWOT (2022 onwards)",
+>>>>>>> Stashed changes
             "earliest_year": 2022,
-            "description": "Surface water elevation and reservoir storage proxy"
+            "notes": swot_status["implementation_strategy"]["default_indicator"],
+            "description": (
+                "Surface water measurement across entire states via NASA POWER is unavailable. "
+                "Default indicator: Soil wetness / GLDAS runoff proxy clearly annotated in UI. "
+                "Designated Indian reservoirs (Idukki, Nagarjuna Sagar, Sardar Sarovar) planned with SWOT launch-era disclaimer."
+            ),
+            "swot_metadata": swot_status
         }
     ]
+
     return jsonify({
         "status": "success",
         "total": len(supported_variables),
