@@ -1,50 +1,90 @@
 /**
  * TerraScope Design Tokens & Color Palette
- * Matches NASA Challenge Project Specification Section 7.4
+ * Derived from Geological Earth System Aesthetic & WCAG AA Compliance
+ * Matches NASA Challenge Project Specification Section 4 & 7.4
  */
 
 :root {
-  /* Core Brand Colors */
-  --bg-base: #FAF6EC;       /* Warm Ivory */
-  --bg-card: #EFE6D2;       /* Light Beige */
-  --bg-card-hover: #E7DDCA;
-  --primary: #2F5D3A;       /* Forest Green */
-  --primary-hover: #24492E;
-  --secondary: #9CAF88;     /* Sage Green */
-  --secondary-light: #DCE5D3;
-  --accent: #C8643B;        /* Terracotta */
-  --accent-hover: #B2522C;
+  /* Core Geological Brand Colors */
+  --bg-base: #FAF6EC;           /* Warm Ivory - Main Canvas Background */
+  --bg-card: #EFE6D2;           /* Light Beige - Panel & Surface Background */
+  --bg-card-hover: #E7DDCA;     /* Slightly Darker Beige for interactive hover */
+  --bg-surface-elevated: #FFFDF9; /* Pure warm white for popups/dropdowns */
+  
+  --primary: #2F5D3A;           /* Forest Green - Primary Buttons & Active Elements */
+  --primary-hover: #24492E;     /* Deep Forest Green - Hover State */
+  --primary-light: #E4ECE3;     /* Light Green Tint for Badges */
+  
+  --secondary: #9CAF88;         /* Sage Green - Outlines, Secondary Controls */
+  --secondary-light: #DCE5D3;   /* Very Light Sage */
+  --secondary-dark: #778B62;    /* Dark Sage */
+  
+  --accent: #C8643B;            /* Terracotta - Highlights, Trend Callouts */
+  --accent-hover: #B2522C;      /* Deep Terracotta */
+  --accent-light: #F7EAE3;      /* Terracotta Wash for Warnings/Highlights */
 
-  /* Typography & Text */
-  --text-main: #3B3F1F;     /* Dark Olive */
-  --text-muted: #6B7052;    /* Medium Olive */
-  --text-light: #FAF6EC;    /* Off-white */
-  --border-color: #D6CCA9;  /* Subtle Card Border */
+  /* Typography & Contrast Tokens (Dark Olive on Warm Ivory > 10:1 WCAG AA) */
+  --text-main: #3B3F1F;         /* Dark Olive - Body Copy & Section Headings */
+  --text-muted: #6B7052;        /* Medium Olive - Secondary Labels, Metadata */
+  --text-light: #FAF6EC;        /* Off-white - Text on dark backgrounds */
+  --text-inverted: #FFFFFF;     /* White - Text on strong buttons */
+  --border-color: #D6CCA9;      /* Card & Input Border Color */
+  --border-color-focus: #C8643B; /* Accent focus border */
 
-  /* Direction-of-Change Map & Legend Palette (Section 7.3) */
-  --trend-strong-inc: #A8461F;  /* Deep Terracotta */
-  --trend-slight-inc: #E3A27F;  /* Light Terracotta */
-  --trend-neutral:    #D9D2BF;  /* Beige Grey */
-  --trend-slight-dec: #B7C7A3;  /* Light Sage */
-  --trend-strong-dec: #2F5D3A;  /* Forest Green */
-  --trend-nodata:     #FAF6EC;  /* Hatched Ivory */
+  /* Direction-of-Change Map & Legend Palette (Dual Visual Encoding - Section 7.3) */
+  --trend-strong-inc: #A8461F;  /* Deep Terracotta (▲▲ Strong increase) */
+  --trend-slight-inc: #E3A27F;  /* Light Terracotta (▲ Slight increase) */
+  --trend-neutral:    #D9D2BF;  /* Warm Neutral Gray (= No clear change) */
+  --trend-slight-dec: #B7C7A3;  /* Light Sage (▼ Slight decrease) */
+  --trend-strong-dec: #2F5D3A;  /* Forest Green (▼▼ Strong decrease) */
+  --trend-nodata:     #FAF6EC;  /* Hatched Ivory (No data) */
 
-  /* Layout Spacing */
+  /* Status & Statistical Confidence Tokens */
+  --status-sig-bg: #E8F2EA;
+  --status-sig-text: #214C2B;
+  --status-var-bg: #EFEFEA;
+  --status-var-text: #5A5D4A;
+
+  /* Layout Spacing Scale */
+  --space-2xs: 2px;
   --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 16px;
   --space-lg: 24px;
   --space-xl: 32px;
+  --space-2xl: 48px;
 
-  /* Geometry & Elevation */
+  /* Geometry & Rounded Radii */
+  --radius-xs: 4px;
   --radius-sm: 6px;
-  --radius-md: 12px;
+  --radius-md: 10px;
   --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  /* Shadows & Elevations */
   --shadow-sm: 0 1px 3px rgba(59, 63, 31, 0.08);
-  --shadow-md: 0 4px 12px rgba(59, 63, 31, 0.12);
-  --shadow-lg: 0 8px 24px rgba(59, 63, 31, 0.16);
+  --shadow-md: 0 4px 14px rgba(59, 63, 31, 0.12);
+  --shadow-lg: 0 10px 28px rgba(59, 63, 31, 0.16);
+  --shadow-inner: inset 0 2px 4px rgba(59, 63, 31, 0.06);
 
   /* Font Families */
   --font-family-base: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-family-mono: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', monospace;
+
+  /* Transitions & Animation Timing */
+  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Accessibility Focus Rings */
+  --focus-ring: 0 0 0 3px rgba(200, 100, 59, 0.35);
+
+  /* Z-Index Hierarchy */
+  --z-map: 1;
+  --z-legend: 400;
+  --z-controls-float: 500;
+  --z-dropdown: 1000;
+  --z-toast: 1500;
+  --z-modal: 2000;
 }
