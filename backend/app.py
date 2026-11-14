@@ -1,12 +1,22 @@
 """
 TerraScope Backend Application Entry Point
-Flask REST API application factory and route registration.
+Flask REST API application factory, route registration, and centralized error handling.
 """
 
 import os
-from flask import Flask, jsonify
-from flask_cors import CORS
-from backend.config import get_config
+import sys
+from pathlib import Path
+from flask import Flask, jsonify, redirect
+
+# Ensure project root is in sys.path
+BASE_DIR = Path(__file__).resolve().parent.parent
+if str(BASE_DIR) not in sys.path:
+    sys.path.insert(0, str(BASE_DIR))
+
+try:
+    from backend.config import get_config
+except ImportError:
+    from config import get_config
 
 
 def create_app(config_class=None):
@@ -18,7 +28,11 @@ def create_app(config_class=None):
     app.config.from_object(config_class)
 
     # Enable Cross-Origin Resource Sharing
-    CORS(app, origins=app.config.get("ALLOWED_ORIGINS", "*"))
+    try:
+        from flask_cors import CORS
+        CORS(app, origins=app.config.get("ALLOWED_ORIGINS", "*"))
+    except ImportError:
+        pass
 
     # Register API Blueprints
     from backend.routes.location import location_bp
@@ -31,6 +45,25 @@ def create_app(config_class=None):
     app.register_blueprint(map_trends_bp, url_prefix="/api")
     app.register_blueprint(report_bp, url_prefix="/api")
 
+    @app.route("/", methods=["GET"])
+    def index():
+        """Root endpoint returning API catalog."""
+        return jsonify({
+            "service": "TerraScope Earth System Trend Detective API",
+            "version": "1.0.0",
+            "edition": "India Edition",
+            "endpoints": {
+                "health": "/api/health",
+                "states": "/api/states",
+                "search": "/api/search?q={query}",
+                "geocode": "/api/geocode?q={query}",
+                "variables": "/api/variables",
+                "analysis": "/api/analysis (POST)",
+                "map_trends": "/api/map-trends?variable={variable}",
+                "report": "/api/report/{report_id}"
+            }
+        }), 200
+
     @app.route("/api/health", methods=["GET"])
     def health_check():
         """Health check endpoint to verify API readiness."""
@@ -41,13 +74,38 @@ def create_app(config_class=None):
             "edition": "India Edition"
         }), 200
 
+    @app.errorhandler(400)
+    def handle_bad_request(error):
+        return jsonify({
+            "status": "error",
+            "error": "Bad request",
+            "message": str(error),
+            "code": 400
+        }), 400
+
     @app.errorhandler(404)
     def handle_not_found(error):
-        return jsonify({"error": "Resource not found", "status": 404}), 404
+        return jsonify({
+            "status": "error",
+            "error": "Resource not found",
+            "code": 404
+        }), 404
+
+    @app.errorhandler(405)
+    def handle_method_not_allowed(error):
+        return jsonify({
+            "status": "error",
+            "error": "Method not allowed",
+            "code": 405
+        }), 405
 
     @app.errorhandler(500)
     def handle_server_error(error):
-        return jsonify({"error": "Internal server error", "status": 500}), 500
+        return jsonify({
+            "status": "error",
+            "error": "Internal server error",
+            "code": 500
+        }), 500
 
     return app
 
