@@ -1,0 +1,314 @@
+/**
+ * TerraScope Base Styles & Component Layouts
+ */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family-base);
+  background-color: var(--bg-base);
+  color: var(--text-main);
+  line-height: 1.5;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header & Navigation */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md) var(--space-xl);
+  background-color: var(--primary);
+  color: var(--text-light);
+  box-shadow: var(--shadow-sm);
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.navbar-search {
+  flex: 1;
+  max-width: 480px;
+  margin: 0 var(--space-xl);
+  position: relative;
+}
+
+.navbar-search input {
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  background-color: var(--bg-base);
+  color: var(--text-main);
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.navbar-search input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(200, 100, 59, 0.25);
+}
+
+.search-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  margin-top: 4px;
+  z-index: 1000;
+  display: none;
+}
+
+.search-dropdown.active {
+  display: block;
+}
+
+.navbar-links a {
+  color: var(--text-light);
+  text-decoration: none;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.2s;
+}
+
+.navbar-links a:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Main Dashboard Layout */
+.dashboard-container {
+  display: flex;
+  flex: 1;
+  padding: var(--space-lg);
+  gap: var(--space-lg);
+  max-width: 1600px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Controls Sidebar */
+.sidebar-controls {
+  width: 340px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  box-shadow: var(--shadow-sm);
+  height: fit-content;
+}
+
+.sidebar-controls h2 {
+  font-size: 1.15rem;
+  color: var(--primary);
+  border-bottom: 2px solid var(--border-color);
+  padding-bottom: var(--space-xs);
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.control-group label {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.checkbox-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.date-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+}
+
+.date-inputs input, select {
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-base);
+  color: var(--text-main);
+  font-size: 0.9rem;
+}
+
+.btn-primary {
+  background-color: var(--primary);
+  color: var(--text-light);
+  border: none;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: var(--space-sm);
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-hover);
+}
+
+/* Main Content Area */
+.main-stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+/* Map Card */
+.map-card {
+  position: relative;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  height: 520px;
+}
+
+#map-view {
+  width: 100%;
+  height: 100%;
+  background-color: #E6EAE1;
+}
+
+/* Map Legend Overlay */
+.map-legend-overlay {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background: var(--bg-base);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
+  box-shadow: var(--shadow-md);
+  z-index: 800;
+  max-width: 260px;
+}
+
+.map-legend-overlay h4 {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: var(--space-xs);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: 0.85rem;
+  margin-bottom: 3px;
+}
+
+.legend-swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+  color: #fff;
+}
+
+/* Analytics Stage (Active State View) */
+.state-view-container {
+  display: none;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.state-view-container.active {
+  display: flex;
+}
+
+.summary-card {
+  background-color: var(--bg-card);
+  border-left: 6px solid var(--accent);
+  border-radius: var(--radius-md);
+  padding: var(--space-md) var(--space-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.summary-card h3 {
+  color: var(--primary);
+  margin-bottom: var(--space-xs);
+}
+
+.charts-wrapper {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-md);
+}
+
+.chart-canvas-container {
+  height: 340px;
+  width: 100%;
+}
+
+/* Footer */
+footer {
+  text-align: center;
+  padding: var(--space-md);
+  background-color: var(--bg-card);
+  border-top: 1px solid var(--border-color);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .dashboard-container {
+    flex-direction: column;
+  }
+  .sidebar-controls {
+    width: 100%;
+  }
+}

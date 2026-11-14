@@ -1,0 +1,16 @@
+{
+  "variable": "temperature",
+  "period": { "start": "2000", "end": "2025" },
+  "unit": "°C/decade",
+  "states": {
+    "Kerala": { "class": "slight_increase", "slope_per_decade": 0.31, "significant": true, "symbol": "▲" },
+    "Tamil Nadu": { "class": "slight_increase", "slope_per_decade": 0.28, "significant": true, "symbol": "▲" },
+    "Karnataka": { "class": "slight_increase", "slope_per_decade": 0.29, "significant": true, "symbol": "▲" },
+    "Maharashtra": { "class": "strong_increase", "slope_per_decade": 0.42, "significant": true, "symbol": "▲▲" },
+    "Gujarat": { "class": "strong_increase", "slope_per_decade": 0.46, "significant": true, "symbol": "▲▲" },
+    "Rajasthan": { "class": "strong_increase", "slope_per_decade": 0.51, "significant": true, "symbol": "▲▲" },
+    "Punjab": { "class": "strong_increase", "slope_per_decade": 0.48, "significant": true, "symbol": "▲▲" },
+    "Himachal Pradesh": { "class": "strong_increase", "slope_per_decade": 0.53, "significant": true, "symbol": "▲▲" },
+    "Goa": { "class": "no_clear_change", "slope_per_decade": 0.08, "significant": false, "symbol": "=" }
+  }
+}

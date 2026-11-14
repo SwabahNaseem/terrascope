@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TerraScope | Earth System Trend Detective (India Edition)</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+  <!-- Design Tokens and Stylesheet -->
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header class="navbar" role="banner">
+    <div class="navbar-brand">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <path d="M2 12h20"></path>
+        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+      </svg>
+      <span>TerraScope</span>
+    </div>
+
+    <!-- Location Search Box -->
+    <div class="navbar-search" role="search">
+      <input type="text" id="location-search-input" placeholder="Search a place, state, or district in India..." aria-label="Search location in India">
+      <div id="search-results-dropdown" class="search-dropdown" role="listbox"></div>
+    </div>
+
+    <nav class="navbar-links" aria-label="Main Navigation">
+      <a href="#about-modal" id="nav-about-btn">About</a>
+    </nav>
+  </header>
+
+  <!-- Main Application Body -->
+  <main class="dashboard-container">
+    
+    <!-- Left Configuration & Controls Sidebar -->
+    <aside class="sidebar-controls" aria-label="Analysis Controls">
+      <h2>Controls</h2>
+
+      <!-- Environmental Variables -->
+      <fieldset class="control-group">
+        <legend><label>Select Variables</label></legend>
+        <div class="checkbox-list">
+          <label class="checkbox-item">
+            <input type="checkbox" name="variable" value="temperature" checked>
+            <span>Air Temperature (°C)</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" name="variable" value="precipitation">
+            <span>Rainfall (mm)</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" name="variable" value="soil_moisture">
+            <span>Soil Wetness (0 to 1)</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" name="variable" value="water_surface">
+            <span>Water Surface (Proxy)</span>
+          </label>
+        </div>
+      </fieldset>
+
+      <!-- Time Window Selection -->
+      <div class="control-group">
+        <label for="start-year-select">From</label>
+        <input type="number" id="start-year-select" min="1981" max="2025" value="2000">
+      </div>
+
+      <div class="control-group">
+        <label for="end-year-select">To</label>
+        <input type="text" id="end-year-select" value="Latest (2025)" disabled>
+      </div>
+
+      <!-- Aggregation Interval -->
+      <div class="control-group">
+        <label for="aggregation-select">View Aggregation</label>
+        <select id="aggregation-select">
+          <option value="yearly" selected>Yearly</option>
+          <option value="seasonal">Seasonal</option>
+          <option value="monthly">Monthly</option>
+        </select>
+      </div>
+
+      <button id="btn-show-trend" class="btn-primary" type="button">Show Trend</button>
+    </aside>
+
+    <!-- Main Map and Analytics Stage -->
+    <section class="main-stage">
+      
+      <!-- Interactive Map Card -->
+      <div class="map-card" aria-label="Interactive Map of India">
+        <div id="map-view"></div>
+
+        <!-- Accessible Direction-of-Change Map Legend -->
+        <div class="map-legend-overlay" id="map-legend" role="region" aria-label="Map Legend">
+          <h4>Direction of Change</h4>
+          <div class="legend-item">
+            <span class="legend-swatch" style="background-color: var(--trend-strong-inc);">▲▲</span>
+            <span>Strong increase</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-swatch" style="background-color: var(--trend-slight-inc);">▲</span>
+            <span>Slight increase</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-swatch" style="background-color: var(--trend-neutral); color: #333;">=</span>
+            <span>No clear change</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-swatch" style="background-color: var(--trend-slight-dec);">▼</span>
+            <span>Slight decrease</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-swatch" style="background-color: var(--trend-strong-dec);">▼▼</span>
+            <span>Strong decrease</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- State-Wise Analysis Container (Revealed upon state selection) -->
+      <section id="state-analysis-stage" class="state-view-container" aria-live="polite">
+        
+        <!-- Plain-Language Summary Card -->
+        <article class="summary-card" id="summary-card">
+          <h3 id="summary-heading">Selected: Kerala (Air Temperature)</h3>
+          <p id="summary-text">
+            Between 2000 and 2025, air temperature in Kerala went <strong>up</strong> by about 0.3 °C per decade.
+            This change is very unlikely to be due to chance.
+          </p>
+        </article>
+
+        <!-- Time-Series Chart Container -->
+        <div class="charts-wrapper">
+          <div class="chart-header">
+            <h3 id="chart-title">Observed Values &amp; Trend Line</h3>
+            <button id="btn-download-report" class="btn-primary" style="padding: 6px 12px; font-size: 0.85rem;" type="button">Download Report</button>
+          </div>
+          <div class="chart-canvas-container">
+            <canvas id="trend-chart-canvas"></canvas>
+          </div>
+        </div>
+
+        <!-- Statistical Significance Drawer -->
+        <details class="charts-wrapper" id="significance-details-drawer">
+          <summary style="cursor: pointer; font-weight: 600; color: var(--primary);">Scientific Methodology &amp; Statistics</summary>
+          <div id="significance-details-content" style="margin-top: 12px; font-size: 0.9rem; line-height: 1.6;">
+            <!-- Dynamically populated report details -->
+          </div>
+        </details>
+      </section>
+
+    </section>
+  </main>
+
+  <!-- Application Footer -->
+  <footer role="contentinfo">
+    <p>TerraScope India Edition &bull; NASA Space Apps / Global Challenge &bull; Built with NASA POWER Data &amp; Leaflet</p>
+  </footer>
+
+  <!-- External Libraries -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- Modular Frontend Scripts -->
+  <script type="module" src="js/script.js"></script>
+</body>
+</html>
