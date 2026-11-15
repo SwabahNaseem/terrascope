@@ -311,4 +311,203 @@ footer {
   .sidebar-controls {
     width: 100%;
   }
+  .map-toolbar-pill {
+    flex-wrap: wrap;
+  }
+}
+
+/* Quick Actions & Basemap Toolbar */
+.map-quick-toolbar {
+  margin-top: 14px;
+  margin-left: 14px;
+  z-index: 900;
+}
+
+.map-toolbar-pill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(18, 24, 20, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 5px 8px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+.toolbar-btn {
+  background: transparent;
+  color: #E6EAE1;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 18px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.toolbar-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #FFFFFF;
+}
+
+.toolbar-btn.active-view,
+.toolbar-btn.active-layer,
+.toolbar-btn.active-level {
+  background: var(--primary, #2F5D3A);
+  color: #FFFFFF;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.toolbar-btn.active-trends {
+  background: var(--accent, #C8643B);
+  color: #FFFFFF;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.25);
+  margin: 0 2px;
+}
+
+/* Floating Back Button */
+.map-back-container {
+  margin-top: 64px;
+  margin-left: 14px;
+  z-index: 900;
+}
+
+.btn-back-india {
+  background: rgba(250, 246, 236, 0.95);
+  color: #2F5D3A;
+  border: 2px solid #2F5D3A;
+  border-radius: 6px;
+  padding: 7px 14px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
+  transition: all 0.2s ease;
+}
+
+.btn-back-india:hover {
+  background: #2F5D3A;
+  color: #FFFFFF;
+}
+
+/* Interactive Coordinate Marker Pin */
+.terrascope-custom-pin {
+  position: relative;
+  width: 26px;
+  height: 26px;
+}
+
+.pin-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(200, 100, 59, 0.4);
+  animation: pin-pulse 1.8s infinite ease-out;
+}
+
+.pin-core {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #FFDF79;
+  border: 2.5px solid #C8643B;
+  box-shadow: 0 0 10px rgba(255, 223, 121, 0.9);
+}
+
+@keyframes pin-pulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+/* Tooltip and Legend Modernization for Satellite View */
+.state-map-tooltip {
+  background: rgba(18, 24, 20, 0.92) !important;
+  color: #FFFFFF !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  border-radius: 6px !important;
+  padding: 6px 10px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+}
+
+.map-legend-overlay {
+  background: rgba(18, 24, 20, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #E6EAE1;
+}
+
+.map-legend-overlay h4 {
+  color: #FFDF79;
+  font-weight: 700;
+}
+
+/* Search Dropdown & Badges */
+.search-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(214, 204, 169, 0.3);
+  transition: background-color 0.15s ease;
+}
+
+.search-item:hover,
+.search-item.highlighted {
+  background-color: var(--bg-card-hover, #E7DDCA);
+}
+
+.search-subtext {
+  font-size: 0.8rem;
+  color: var(--text-muted, #6B7052);
+  margin-left: 6px;
+}
+
+.search-badge {
+  font-size: 0.72rem;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.badge-state, .badge-ut {
+  background-color: rgba(47, 93, 58, 0.15);
+  color: var(--primary, #2F5D3A);
+}
+
+.badge-city, .badge-district {
+  background-color: rgba(200, 100, 59, 0.15);
+  color: var(--accent, #C8643B);
+}
+
+.badge-country, .badge-capital {
+  background-color: rgba(41, 98, 255, 0.15);
+  color: #1A56DB;
 }

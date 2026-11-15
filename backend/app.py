@@ -39,11 +39,13 @@ def create_app(config_class=None):
     from backend.routes.analysis import analysis_bp
     from backend.routes.map_trends import map_trends_bp
     from backend.routes.report import report_bp
+    from backend.routes.boundaries import boundaries_bp
 
     app.register_blueprint(location_bp, url_prefix="/api")
     app.register_blueprint(analysis_bp, url_prefix="/api")
     app.register_blueprint(map_trends_bp, url_prefix="/api")
     app.register_blueprint(report_bp, url_prefix="/api")
+    app.register_blueprint(boundaries_bp, url_prefix="/api")
 
     @app.route("/", methods=["GET"])
     def index():
@@ -51,12 +53,14 @@ def create_app(config_class=None):
         return jsonify({
             "service": "TerraScope Earth System Trend Detective API",
             "version": "1.0.0",
-            "edition": "India Edition",
+            "edition": "Global & India Edition",
             "endpoints": {
                 "health": "/api/health",
                 "states": "/api/states",
+                "boundaries": "/api/boundaries?iso3={iso3}&adm={adm0|adm1|adm2}",
                 "search": "/api/search?q={query}",
                 "geocode": "/api/geocode?q={query}",
+                "reverse": "/api/reverse?lat={lat}&lon={lon}",
                 "variables": "/api/variables",
                 "analysis": "/api/analysis (POST)",
                 "map_trends": "/api/map-trends?variable={variable}",

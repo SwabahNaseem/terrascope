@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TerraScope | Earth System Trend Detective (India Edition)</title>
+  <title>TerraScope | Earth System Trend Detective (Global &amp; India Edition)</title>
 
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
@@ -25,9 +25,9 @@
       <span>TerraScope</span>
     </div>
 
-    <!-- Location Search Box -->
+    <!-- Worldwide & Regional Location Search Box -->
     <div class="navbar-search" role="search">
-      <input type="text" id="location-search-input" placeholder="Search a place, state, or district in India..." aria-label="Search location in India">
+      <input type="text" id="location-search-input" placeholder="Search any city, state, or country worldwide (e.g. Kerala, Tokyo, London, Paris)..." aria-label="Search location worldwide">
       <div id="search-results-dropdown" class="search-dropdown" role="listbox"></div>
     </div>
 
@@ -69,12 +69,12 @@
       <!-- Time Window Selection -->
       <div class="control-group">
         <label for="start-year-select">From</label>
-        <input type="number" id="start-year-select" min="1981" max="2025" value="2000">
+        <input type="number" id="start-year-select" min="1981" max="2024" value="2000">
       </div>
 
       <div class="control-group">
         <label for="end-year-select">To</label>
-        <input type="text" id="end-year-select" value="Latest (2025)" disabled>
+        <input type="number" id="end-year-select" min="1982" max="2025" value="2024">
       </div>
 
       <!-- Aggregation Interval -->
@@ -139,7 +139,10 @@
         <div class="charts-wrapper">
           <div class="chart-header">
             <h3 id="chart-title">Observed Values &amp; Trend Line</h3>
-            <button id="btn-download-report" class="btn-primary" style="padding: 6px 12px; font-size: 0.85rem;" type="button">Download Report</button>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <button id="btn-download-report" class="btn-primary" style="padding: 6px 12px; font-size: 0.85rem;" type="button" title="Download formatted PDF report">📄 Download PDF</button>
+              <button id="btn-download-md" class="btn-secondary" style="padding: 6px 12px; font-size: 0.85rem; background: rgba(47, 93, 58, 0.1); color: var(--primary); border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer;" type="button" title="Download raw Markdown report">📝 Markdown</button>
+            </div>
           </div>
           <div class="chart-canvas-container">
             <canvas id="trend-chart-canvas"></canvas>
@@ -160,12 +163,14 @@
 
   <!-- Application Footer -->
   <footer role="contentinfo">
-    <p>TerraScope India Edition &bull; NASA Space Apps / Global Challenge &bull; Built with NASA POWER Data &amp; Leaflet</p>
+    <p>TerraScope Global &amp; India Edition &bull; NASA Space Apps / Global Challenge &bull; Built with NASA POWER &amp; GPM IMERG Data &bull; Boundaries &copy; <a href="https://www.geoboundaries.org/" target="_blank" rel="noopener" style="color: inherit; text-decoration: underline;">geoBoundaries</a> (CC-BY 4.0 / ODbL)</p>
   </footer>
 
   <!-- External Libraries -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- html2pdf.js for Client-Side PDF Report Generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <!-- Modular Frontend Scripts -->
   <script type="module" src="js/script.js"></script>

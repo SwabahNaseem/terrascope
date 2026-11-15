@@ -1,10 +1,9 @@
 """
 Unit Conversion & Representation
-<<<<<<< Updated upstream
-Normalizes raw satellite measurement units to user-facing formats and handles conversions.
+Normalizes raw satellite measurement units to user-facing formats following NASA POWER & GPM standards.
 """
 
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 VARIABLE_UNIT_METADATA: Dict[str, Dict[str, Any]] = {
     "temperature": {
@@ -20,25 +19,34 @@ VARIABLE_UNIT_METADATA: Dict[str, Dict[str, Any]] = {
         "name": "Precipitation / Rainfall",
         "code": "PRECTOTCORR",
         "native_unit": "mm/day",
-        "display_unit": "mm",
+        "display_unit": "mm/year",
         "rate_unit": "mm/decade",
-        "source": "NASA POWER (PRECTOTCORR)",
+        "source": "NASA POWER & GPM IMERG",
         "description": "Precipitation corrected for surface model dynamics"
     },
     "soil_moisture": {
         "name": "Surface Soil Wetness",
         "code": "GWETTOP",
-        "native_unit": "fraction (0-1)",
-        "display_unit": "fraction (0-1)",
+        "native_unit": "0–1 fraction",
+        "display_unit": "0 to 1 (fraction)",
         "rate_unit": "fraction/decade",
         "source": "NASA POWER (GWETTOP)",
         "description": "Surface soil moisture fraction (0 = dry, 1 = saturated)"
     },
+    "soil_moisture_top": {
+        "name": "Surface Soil Wetness (0–5 cm)",
+        "code": "GWETTOP",
+        "native_unit": "0–1 fraction",
+        "display_unit": "0 to 1 (fraction)",
+        "rate_unit": "fraction/decade",
+        "source": "NASA POWER (GWETTOP)",
+        "description": "Dimensionless surface soil moisture ratio"
+    },
     "soil_moisture_root": {
-        "name": "Root Zone Soil Wetness",
+        "name": "Root Zone Soil Wetness (0–100 cm)",
         "code": "GWETROOT",
-        "native_unit": "fraction (0-1)",
-        "display_unit": "fraction (0-1)",
+        "native_unit": "0–1 fraction",
+        "display_unit": "0 to 1 (fraction)",
         "rate_unit": "fraction/decade",
         "source": "NASA POWER (GWETROOT)",
         "description": "Root zone soil moisture fraction (0 = dry, 1 = saturated)"
@@ -51,61 +59,34 @@ VARIABLE_UNIT_METADATA: Dict[str, Dict[str, Any]] = {
         "rate_unit": "index/decade",
         "source": "SWOT / Model Proxy",
         "description": "Surface water elevation and reservoir storage proxy"
-=======
-Normalizes raw satellite measurement units to user-facing formats following NASA POWER standards.
-"""
-
-from typing import Dict
-
-
-PARAMETER_UNITS: Dict[str, Dict[str, str]] = {
-    "temperature": {
-        "friendly_name": "Air Temperature at 2 Meters",
-        "native_units": "°C",
-        "display_units": "°C",
-        "notes": "Daily mean, aggregated to monthly/yearly"
-    },
-    "precipitation": {
-        "friendly_name": "Precipitation Corrected",
-        "native_units": "mm/day",
-        "display_units": "mm/year or mm/month",
-        "notes": "Summed over aggregation window"
-    },
-    "soil_moisture_top": {
-        "friendly_name": "Surface Soil Wetness (0–5 cm)",
-        "native_units": "0–1 fraction",
-        "display_units": "Fraction (0 to 1)",
-        "notes": "Dimensionless soil moisture ratio"
-    },
-    "soil_moisture_root": {
-        "friendly_name": "Root Zone Soil Wetness (0–100 cm)",
-        "native_units": "0–1 fraction",
-        "display_units": "Fraction (0 to 1)",
-        "notes": "Dimensionless root zone ratio"
-    },
-    "soil_moisture": {
-        "friendly_name": "Surface Soil Wetness (0–5 cm)",
-        "native_units": "0–1 fraction",
-        "display_units": "Fraction (0 to 1)",
-        "notes": "Dimensionless soil moisture ratio"
-    },
-    "water_surface": {
-        "friendly_name": "Water Surface Elevation & Extent Proxy",
-        "native_units": "meters / index",
-        "display_units": "meters (SWOT) / index (proxy)",
-        "notes": "Soil wetness / GLDAS runoff proxy in Phase 1"
->>>>>>> Stashed changes
     }
+}
+
+PARAMETER_UNITS = {
+    k: {
+        "friendly_name": v["name"],
+        "native_units": v["native_unit"],
+        "display_units": v["display_unit"],
+        "notes": v["description"]
+    }
+    for k, v in VARIABLE_UNIT_METADATA.items()
 }
 
 
 def format_unit_display(variable: str) -> str:
     """Returns friendly unit string for charts and summary cards."""
-<<<<<<< Updated upstream
     meta = VARIABLE_UNIT_METADATA.get(variable)
     if meta:
         return meta["display_unit"]
-    return ""
+    fallback = {
+        "temperature": "°C",
+        "precipitation": "mm/year",
+        "soil_moisture": "fraction",
+        "soil_moisture_top": "fraction",
+        "soil_moisture_root": "fraction",
+        "water_surface": "index"
+    }
+    return fallback.get(variable, "")
 
 
 def format_rate_display(variable: str, rate: float) -> str:
@@ -127,58 +108,23 @@ def get_variable_details(variable: str) -> Dict[str, Any]:
         "source": "Observation Data",
         "description": f"{variable} observation records"
     })
-=======
-    spec = PARAMETER_UNITS.get(variable)
-    if spec:
-        return spec["display_units"]
-    
-    fallback_units = {
-        "temperature": "°C",
-        "precipitation": "mm/year",
-        "soil_moisture_top": "Fraction (0 to 1)",
-        "soil_moisture_root": "Fraction (0 to 1)",
-        "soil_moisture": "Fraction (0 to 1)",
-        "water_surface": "meters",
-    }
-    return fallback_units.get(variable, "")
->>>>>>> Stashed changes
 
 
 def get_native_unit(variable: str) -> str:
     """Returns native unit string for given variable."""
-    spec = PARAMETER_UNITS.get(variable)
-    return spec["native_units"] if spec else ""
+    meta = VARIABLE_UNIT_METADATA.get(variable)
+    return meta["native_unit"] if meta else ""
 
 
 def convert_units(
     variable: str,
-    value: float,
+    value: Optional[float],
     from_unit: str,
     to_unit: str,
     days: float = 365.25
-) -> float:
+) -> Optional[float]:
     """
-<<<<<<< Updated upstream
-    Converts unit representations if necessary (e.g. mm/day to annual cumulative mm).
-    """
-    if from_unit == to_unit or value is None:
-        return value
-
-    # Precipitation: daily average to annual sum estimation
-    if variable == "precipitation":
-        if from_unit == "mm/day" and to_unit in ("mm/year", "mm"):
-            return value * 365.25
-        if from_unit in ("mm/year", "mm") and to_unit == "mm/day":
-            return value / 365.25
-=======
     Converts unit representations (e.g. mm/day to mm/year or mm/month).
-    
-    Args:
-        variable: Variable name (e.g. 'precipitation')
-        value: Input numerical value
-        from_unit: Source unit string
-        to_unit: Target unit string
-        days: Number of days in the aggregation window (default 365.25 for annual sum)
     """
     if value is None:
         return None
@@ -196,9 +142,8 @@ def convert_units(
                 return round(value * days, 2)
             elif to_u in ("mm/month", "mm_per_month"):
                 return round(value * 30.4375, 2)
-        elif from_u in ("mm/year", "mm_per_year"):
+        elif from_u in ("mm/year", "mm_per_year", "mm"):
             if to_u in ("mm/day", "mm_per_day"):
                 return round(value / days, 4)
->>>>>>> Stashed changes
 
     return value

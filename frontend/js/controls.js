@@ -46,12 +46,39 @@ export function initControls({ onTrendRequested, onVariableChange, onCompareTogg
       if (isNaN(val) || val < 1981) val = 1981;
       if (val > 2024) val = 2024;
       startYearInput.value = val;
+
+      if (endYearInput) {
+        let endVal = parseInt(endYearInput.value, 10);
+        if (!isNaN(endVal) && endVal <= val) {
+          endYearInput.value = Math.min(2025, val + 1);
+        }
+      }
     });
   }
 
-  // 3. Ensure End Year displays latest available data context
-  if (endYearInput && !endYearInput.value) {
-    endYearInput.value = 'Latest (2025)';
+  // 3. End Year input validation (range: 1982 - 2025)
+  if (endYearInput) {
+    endYearInput.removeAttribute('disabled');
+    endYearInput.setAttribute('type', 'number');
+    endYearInput.setAttribute('min', '1982');
+    endYearInput.setAttribute('max', '2025');
+    if (!endYearInput.value || isNaN(parseInt(endYearInput.value, 10))) {
+      endYearInput.value = '2024';
+    }
+
+    endYearInput.addEventListener('change', () => {
+      let val = parseInt(endYearInput.value, 10);
+      if (isNaN(val) || val < 1982) val = 1982;
+      if (val > 2025) val = 2025;
+
+      if (startYearInput) {
+        let startVal = parseInt(startYearInput.value, 10);
+        if (!isNaN(startVal) && val <= startVal) {
+          val = Math.min(2025, startVal + 1);
+        }
+      }
+      endYearInput.value = val;
+    });
   }
 
   // 4. Compare Mode toggle check (dynamically inject if not present in DOM)
@@ -75,12 +102,18 @@ export function initControls({ onTrendRequested, onVariableChange, onCompareTogg
 export function getSelectedOptions() {
   const selectedVariables = getSelectedVariables();
   const startYearInput = document.getElementById('start-year-select');
+  const endYearInput = document.getElementById('end-year-select');
   const aggregationSelect = document.getElementById('aggregation-select');
   const compareToggle = document.getElementById('compare-mode-toggle');
 
   let startYear = parseInt(startYearInput?.value || '2000', 10);
   if (isNaN(startYear) || startYear < 1981) startYear = 1981;
-  if (startYear > 2025) startYear = 2025;
+  if (startYear > 2024) startYear = 2024;
+
+  let endYear = parseInt(endYearInput?.value || '2024', 10);
+  if (isNaN(endYear) || endYear < 1982) endYear = 1982;
+  if (endYear > 2025) endYear = 2025;
+  if (endYear <= startYear) endYear = Math.min(2025, startYear + 1);
 
   const aggregation = aggregationSelect?.value || 'yearly';
   const compareMode = compareToggle ? compareToggle.checked : false;
@@ -88,7 +121,7 @@ export function getSelectedOptions() {
   return {
     variables: selectedVariables.length > 0 ? selectedVariables : ['temperature'],
     startYear: startYear,
-    endYear: 'latest',
+    endYear: endYear,
     aggregation: aggregation,
     compareMode: compareMode
   };

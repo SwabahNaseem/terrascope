@@ -32,10 +32,20 @@ class Config:
     NASA_POWER_TIMEOUT = int(os.getenv("NASA_POWER_TIMEOUT_SECONDS", "30"))
     NASA_POWER_MAX_RETRIES = int(os.getenv("NASA_POWER_MAX_RETRIES", "3"))
 
-    # Geocoding (Nominatim) Settings
+    # Geocoding Settings
     NOMINATIM_BASE_URL = os.getenv("NOMINATIM_BASE_URL", "https://nominatim.openstreetmap.org/search")
-    NOMINATIM_USER_AGENT = os.getenv("NOMINATIM_USER_AGENT", "TerraScope-India-Trend-Detective/1.0 (contact: info@terrascope.org)")
+    NOMINATIM_USER_AGENT = os.getenv("NOMINATIM_USER_AGENT", "TerraScope-Trend-Detective/1.0 (contact: info@terrascope.org)")
     NOMINATIM_DELAY = float(os.getenv("NOMINATIM_RATE_LIMIT_DELAY", "1.0"))
+    MAPS_CO_BASE_URL = os.getenv("MAPS_CO_BASE_URL", "https://geocode.maps.co/")
+    MAPS_CO_API_KEY = os.getenv("MAPS_CO_API_KEY", "6af90b68bd2d8927044351jui42295")
+
+    # GPM IMERG Settings
+    GPM_BASE_URL = os.getenv("GPM_BASE_URL", "https://gpm.nasa.gov/data/imerg")
+    GPM_CACHE_DIR = BASE_DIR / os.getenv("GPM_CACHE_DIR", "data/cache/gpm")
+
+    # geoBoundaries Settings (Administrative Boundaries ADM0, ADM1, ADM2)
+    GEOBOUNDARIES_BASE_URL = os.getenv("GEOBOUNDARIES_BASE_URL", "https://www.geoboundaries.org/api/current/gbOpen/")
+    GEOBOUNDARIES_CACHE_DIR = BASE_DIR / os.getenv("GEOBOUNDARIES_CACHE_DIR", "data/cache/geoboundaries")
 
     # Statistical Defaults
     DEFAULT_SIGNIFICANCE_ALPHA = float(os.getenv("DEFAULT_SIGNIFICANCE_ALPHA", "0.05"))
@@ -48,7 +58,7 @@ class Config:
     @classmethod
     def init_directories(cls):
         """Ensure runtime directories exist."""
-        for directory in [cls.CACHE_DIR, cls.PROCESSED_DATA_DIR, cls.SAMPLE_DATA_DIR, cls.RAW_DATA_DIR]:
+        for directory in [cls.CACHE_DIR, cls.PROCESSED_DATA_DIR, cls.SAMPLE_DATA_DIR, cls.RAW_DATA_DIR, cls.GPM_CACHE_DIR, cls.GEOBOUNDARIES_CACHE_DIR]:
             directory.mkdir(parents=True, exist_ok=True)
 
 

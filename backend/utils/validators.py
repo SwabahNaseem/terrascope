@@ -27,11 +27,11 @@ def validate_analysis_request(data: Any) -> Tuple[bool, List[str]]:
         errors.append("Missing or invalid required field 'location'")
     else:
         loc_type = location.get("type", "").lower()
-        if loc_type not in ("state", "point"):
-            errors.append("Field 'location.type' must be either 'state' or 'point'")
-        elif loc_type == "state":
+        if loc_type not in ("state", "point", "district", "country", "region"):
+            errors.append("Field 'location.type' must be one of: 'state', 'point', 'district', 'country', 'region'")
+        elif loc_type in ("state", "district", "country", "region"):
             if not location.get("name") and not location.get("code"):
-                errors.append("For location type 'state', either 'name' or 'code' is required")
+                errors.append(f"For location type '{loc_type}', either 'name' or 'code' is required")
         elif loc_type == "point":
             coords = location.get("coordinates")
             if not coords or not isinstance(coords, (list, tuple)) or len(coords) < 2:
