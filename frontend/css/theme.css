@@ -1,33 +1,49 @@
 /**
- * TerraScope Design Tokens & Color Palette
- * Matches NASA Challenge Project Specification Section 7.4
+ * EarthWatch / TerraScope Design Tokens & Reference Palette
+ * Matches Reference Colour Palette Specification: Dark Navy with Cyan, Blue, and Green accents.
  */
 
 :root {
-  /* Core Brand Colors */
-  --bg-base: #FAF6EC;       /* Warm Ivory */
-  --bg-card: #EFE6D2;       /* Light Beige */
-  --bg-card-hover: #E7DDCA;
-  --primary: #2F5D3A;       /* Forest Green */
-  --primary-hover: #24492E;
-  --secondary: #9CAF88;     /* Sage Green */
-  --secondary-light: #DCE5D3;
-  --accent: #C8643B;        /* Terracotta */
-  --accent-hover: #B2522C;
+  /* Core Colours from Reference Specification */
+  --bg: #06111F;        /* Deep navy page background */
+  --panel: #0C1D31;     /* Main cards and panels */
+  --panel2: #10243B;    /* Secondary panels, inputs, nested elements */
+  --line: #1B3B59;      /* Borders and dividers */
+
+  --cyan: #19C8F2;      /* Primary accent */
+  --blue: #258BFF;      /* Secondary accent */
+  --green: #42D69B;     /* Positive / environmental accent */
+
+  --text: #EDF6FF;      /* Main text (off-white blue) */
+  --muted: #9BB0C5;     /* Secondary text (muted blue-grey) */
+
+  --orange: #FFAD45;    /* Warning / highlight */
+  --red: #FF6B58;       /* Alert / danger */
+
+  /* Backward-compatible and semantic tokens mapped directly to reference palette */
+  --bg-base: var(--bg);
+  --bg-card: var(--panel);
+  --bg-card-hover: var(--panel2);
+  --primary: var(--blue);
+  --primary-hover: #1b74d9;
+  --secondary: var(--cyan);
+  --secondary-light: rgba(25, 200, 242, 0.15);
+  --accent: var(--cyan);
+  --accent-hover: #16b0d6;
 
   /* Typography & Text */
-  --text-main: #3B3F1F;     /* Dark Olive */
-  --text-muted: #6B7052;    /* Medium Olive */
-  --text-light: #FAF6EC;    /* Off-white */
-  --border-color: #D6CCA9;  /* Subtle Card Border */
+  --text-main: var(--text);
+  --text-muted: var(--muted);
+  --text-light: var(--text);
+  --border-color: var(--line);
 
-  /* Direction-of-Change Map & Legend Palette (Section 7.3) */
-  --trend-strong-inc: #A8461F;  /* Deep Terracotta */
-  --trend-slight-inc: #E3A27F;  /* Light Terracotta */
-  --trend-neutral:    #D9D2BF;  /* Beige Grey */
-  --trend-slight-dec: #B7C7A3;  /* Light Sage */
-  --trend-strong-dec: #2F5D3A;  /* Forest Green */
-  --trend-nodata:     #FAF6EC;  /* Hatched Ivory */
+  /* Direction-of-Change Map & Legend Palette (Reference Mapped) */
+  --trend-strong-inc: var(--red);     /* Coral Red #FF6B58 */
+  --trend-slight-inc: var(--orange);  /* Orange #FFAD45 */
+  --trend-neutral:    var(--line);    /* Muted Blue #1B3B59 */
+  --trend-slight-dec: var(--cyan);    /* Bright Cyan #19C8F2 */
+  --trend-strong-dec: var(--green);   /* Green #42D69B */
+  --trend-nodata:     var(--panel2);  /* Blue Navy #10243B */
 
   /* Layout Spacing */
   --space-xs: 4px;
@@ -40,9 +56,9 @@
   --radius-sm: 6px;
   --radius-md: 12px;
   --radius-lg: 16px;
-  --shadow-sm: 0 1px 3px rgba(59, 63, 31, 0.08);
-  --shadow-md: 0 4px 12px rgba(59, 63, 31, 0.12);
-  --shadow-lg: 0 8px 24px rgba(59, 63, 31, 0.16);
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
 
   /* Font Families */
   --font-family-base: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;

@@ -2,14 +2,15 @@
  * TerraScope Accessible Legend Component
  * Manages direction-of-change dual-encoding visual representation (symbols + colors),
  * keyboard accessibility, and interactive hover filtering across choropleth polygons.
+ * Styled to EarthWatch / TerraScope Dark Navy Reference Palette.
  */
 
 const LEGEND_ITEMS = [
-  { key: 'strong_increase', label: 'Strong increase', symbol: '▲▲', color: 'var(--trend-strong-inc, #A8461F)' },
-  { key: 'slight_increase', label: 'Slight increase', symbol: '▲',  color: 'var(--trend-slight-inc, #E3A27F)' },
-  { key: 'no_clear_change', label: 'No clear change', symbol: '=',  color: 'var(--trend-neutral, #D9D2BF)', textColor: '#333' },
-  { key: 'slight_decrease', label: 'Slight decrease', symbol: '▼',  color: 'var(--trend-slight-dec, #B7C7A3)' },
-  { key: 'strong_decrease', label: 'Strong decrease', symbol: '▼▼', color: 'var(--trend-strong-dec, #2F5D3A)' }
+  { key: 'strong_increase', label: 'Strong increase', symbol: '▲▲', color: 'var(--trend-strong-inc, #FF6B58)', textColor: '#ffffff' },
+  { key: 'slight_increase', label: 'Slight increase', symbol: '▲',  color: 'var(--trend-slight-inc, #FFAD45)', textColor: '#06111F' },
+  { key: 'no_clear_change', label: 'No clear change', symbol: '=',  color: 'var(--trend-neutral, #1B3B59)', textColor: '#EDF6FF' },
+  { key: 'slight_decrease', label: 'Slight decrease', symbol: '▼',  color: 'var(--trend-slight-dec, #19C8F2)', textColor: '#06111F' },
+  { key: 'strong_decrease', label: 'Strong decrease', symbol: '▼▼', color: 'var(--trend-strong-dec, #42D69B)', textColor: '#06111F' }
 ];
 
 let activeFilterLock = null;
@@ -70,7 +71,7 @@ function setupLegendItemInteractions(itemEl, classKey, { onHoverFilter, onHoverR
   itemEl.style.cursor = 'pointer';
   itemEl.style.transition = 'background-color 0.15s, transform 0.1s';
   itemEl.style.borderRadius = '4px';
-  itemEl.style.padding = '2px 4px';
+  itemEl.style.padding = '3px 6px';
 
   // Hover events
   itemEl.addEventListener('mouseenter', () => {
@@ -113,7 +114,7 @@ function setupLegendItemInteractions(itemEl, classKey, { onHoverFilter, onHoverR
         parent.querySelectorAll('.legend-item').forEach(el => unhighlightLegendItem(el));
       }
       highlightLegendItem(itemEl);
-      itemEl.style.outline = '2px solid var(--primary, #2F5D3A)';
+      itemEl.style.outline = '2px solid var(--cyan, #19C8F2)';
       if (onHoverFilter) onHoverFilter(classKey);
     }
   };
@@ -128,7 +129,7 @@ function setupLegendItemInteractions(itemEl, classKey, { onHoverFilter, onHoverR
 }
 
 function highlightLegendItem(itemEl) {
-  itemEl.style.backgroundColor = 'var(--bg-card-hover, #E7DDCA)';
+  itemEl.style.backgroundColor = 'var(--panel2, #10243B)';
   itemEl.style.transform = 'translateX(2px)';
 }
 

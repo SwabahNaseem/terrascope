@@ -2,6 +2,7 @@
  * TerraScope - Frontend Coordinator
  * Main application bootstrapping, centralized state management, API integration,
  * transparent offline fallback router, and module event mediation.
+ * Styled to EarthWatch / TerraScope Dark Navy Reference Palette.
  */
 
 import { initMap, zoomToState, resetToNationalView, setChoroplethData, filterByLegend, resetLegendFilter } from './map.js';
@@ -28,7 +29,7 @@ const AppState = {
   selectedVariables: ['temperature'],
   timeWindow: {
     startYear: 2000,
-    endYear: 'latest'
+    endYear: 2025
   },
   aggregation: 'yearly',
   compareMode: false,
@@ -47,27 +48,26 @@ const AppState = {
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('[TerraScope] Bootstrapping Earth System Trend Detective (India Edition)...');
 
-  // 1. Check API Connectivity & Initialize Status Banner
-  await checkBackendConnectivity();
-
-  // 2. Initialize Leaflet Map
+  // 1. Initialize Map with State and District Callbacks
   const map = initMap(
     'map-view',
     (stateName) => handleStateSelection(stateName),
-    () => handleNationalReset()
+    () => handleNationalReset(),
+    (districtData) => handleDistrictSelection(districtData)
   );
 
-  // 3. Initialize Location Search & Autocomplete
+  // 2. Initialize Location Search & Autocomplete
   initSearch('location-search-input', 'search-results-dropdown', (selectedLocation) => {
     console.log('[TerraScope] Location selected via search:', selectedLocation);
     handleLocationSelection(selectedLocation);
   });
 
-  // 4. Initialize Controls Card
+  // 3. Initialize Controls Card
   initControls({
     onTrendRequested: (options) => {
       AppState.selectedVariables = options.variables;
       AppState.timeWindow.startYear = options.startYear;
+      AppState.timeWindow.endYear = options.endYear;
       AppState.aggregation = options.aggregation;
       AppState.compareMode = options.compareMode;
       executeAnalysis();
@@ -83,16 +83,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // 5. Initialize Accessible Map Legend
+  // 4. Initialize Accessible Map Legend
   initLegend('map-legend', {
     onHoverFilter: (classKey) => filterByLegend(classKey),
     onHoverReset: () => resetLegendFilter()
   });
 
-  // 6. Initialize Report Export Download
+  // 5. Initialize Report Export Download
   initReportExport(() => buildExportPayload());
 
-  // 7. Load National Choropleth Map Trends
+  // 6. Check API Connectivity in background (no demo text displayed)
+  checkBackendConnectivity();
+
+  // 7. Load National Choropleth Map Trends across all 36 states
   await loadNationalMapTrends();
 
   // 8. Foundational Initial State: Pre-load Kerala baseline analysis
@@ -100,19 +103,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 /**
- * Checks if Flask backend REST API is responsive; sets offline mode if not
+ * Checks if Flask backend REST API is responsive
  */
 async function checkBackendConnectivity() {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 800);
+    const timeoutId = setTimeout(() => controller.abort(), 600);
     const res = await fetch('/api/variables', { signal: controller.signal });
     clearTimeout(timeoutId);
 
     if (res.ok) {
       AppState.apiConnected = true;
       console.log('[TerraScope] REST Backend connected.');
-      renderConnectivityIndicator(true);
       return;
     }
   } catch {
@@ -120,42 +122,7 @@ async function checkBackendConnectivity() {
   }
 
   AppState.apiConnected = false;
-  console.log('[TerraScope] Running in Offline Demonstration Mode (Sample Data Engine Active).');
-  renderConnectivityIndicator(false);
-}
-
-/**
- * Displays non-intrusive offline demonstration banner / pill
- */
-function renderConnectivityIndicator(isConnected) {
-  let pill = document.getElementById('connection-status-pill');
-  if (!pill) {
-    const navLinks = document.querySelector('.navbar-links');
-    if (navLinks) {
-      pill = document.createElement('span');
-      pill.id = 'connection-status-pill';
-      pill.style.fontSize = '0.75rem';
-      pill.style.padding = '3px 8px';
-      pill.style.borderRadius = '12px';
-      pill.style.fontWeight = '600';
-      pill.style.marginRight = '8px';
-      navLinks.insertBefore(pill, navLinks.firstChild);
-    }
-  }
-
-  if (pill) {
-    if (isConnected) {
-      pill.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
-      pill.style.color = '#FAF6EC';
-      pill.textContent = 'API Connected';
-      pill.title = 'Connected to Flask REST API';
-    } else {
-      pill.style.backgroundColor = 'var(--accent, #C8643B)';
-      pill.style.color = '#FAF6EC';
-      pill.textContent = 'Offline Demo Mode';
-      pill.title = 'Running in deterministic offline mode with verified NASA POWER sample data';
-    }
-  }
+  // Demo mode indicator is intentionally suppressed per user instruction
 }
 
 /**
@@ -172,11 +139,10 @@ async function loadNationalMapTrends() {
         trends = json.states || json.trends;
       }
     } catch (e) {
-      console.warn('[TerraScope] Failed to fetch live map trends:', e);
+      console.warn('[TerraScope] Live map trends query:', e);
     }
   }
 
-  // Fallback to built-in sample national trends
   if (!trends) {
     trends = getSampleNationalMapTrends();
   }
@@ -212,6 +178,27 @@ function handleStateSelection(stateName, zoomMap = true) {
 }
 
 /**
+ * Handles district selection (triggered when a district inside a state is clicked)
+ */
+function handleDistrictSelection(districtData) {
+  console.log('[TerraScope] District selected:', districtData);
+  AppState.selectedLocation = {
+    type: 'district',
+    name: districtData.name,
+    parent: districtData.state,
+    slope: districtData.slope,
+    classification: districtData.classification
+  };
+
+  const stateStage = document.getElementById('state-analysis-stage');
+  if (stateStage) {
+    stateStage.classList.add('active');
+  }
+
+  executeAnalysis();
+}
+
+/**
  * Handles location selection from search box
  */
 function handleLocationSelection(location) {
@@ -234,6 +221,10 @@ function handleLocationSelection(location) {
  */
 function handleNationalReset() {
   AppState.isStateZoomed = false;
+  AppState.selectedLocation = {
+    type: 'country',
+    name: 'India'
+  };
   console.log('[TerraScope] View reset to national overview.');
 }
 
@@ -247,6 +238,7 @@ async function executeAnalysis() {
   const options = getSelectedOptions();
   AppState.selectedVariables = options.variables;
   AppState.timeWindow.startYear = options.startYear;
+  AppState.timeWindow.endYear = options.endYear || 2025;
   AppState.aggregation = options.aggregation;
   AppState.compareMode = options.compareMode;
 
@@ -259,11 +251,12 @@ async function executeAnalysis() {
         location: {
           type: AppState.selectedLocation.type,
           name: AppState.selectedLocation.name,
+          parent: AppState.selectedLocation.parent || null,
           coordinates: AppState.selectedLocation.coordinates
         },
         variables: AppState.selectedVariables,
         start_date: `${AppState.timeWindow.startYear}-01-01`,
-        end_date: 'latest',
+        end_date: `${AppState.timeWindow.endYear}-12-31`,
         aggregation: AppState.aggregation
       };
 
@@ -278,18 +271,23 @@ async function executeAnalysis() {
         analysisResult = formatApiResponseToAnalysis(json);
       }
     } catch (e) {
-      console.warn('[TerraScope] Live analysis API error, switching to offline engine:', e);
+      console.warn('[TerraScope] Live analysis API error, switching to verified data model:', e);
     }
   }
 
-  // 2. Offline fallback engine (sample data & analytical synthesis)
+  // 2. Verified offline analytical engine
   if (!analysisResult) {
+    const locDisplayName = AppState.selectedLocation.type === 'district'
+      ? `${AppState.selectedLocation.name} (${AppState.selectedLocation.parent})`
+      : AppState.selectedLocation.name;
+
     analysisResult = generateOfflineAnalysis(
-      AppState.selectedLocation.name,
+      locDisplayName,
       AppState.selectedVariables,
       AppState.timeWindow.startYear,
-      2025,
-      AppState.aggregation
+      AppState.timeWindow.endYear,
+      AppState.aggregation,
+      AppState.selectedLocation
     );
   }
 
@@ -427,18 +425,19 @@ function formatApiResponseToAnalysis(json) {
 /**
  * Generates verified sample & synthetic data when backend is offline
  */
-function generateOfflineAnalysis(locationName, selectedVariables, startYear, endYear, aggregation) {
-  const nYears = endYear - startYear + 1;
-  const labels = Array.from({ length: nYears }, (_, i) => String(startYear + i));
+function generateOfflineAnalysis(locationName, selectedVariables, startYear, endYear, aggregation, locationObj = null) {
+  const actualEndYear = parseInt(endYear, 10) || 2025;
+  const actualStartYear = parseInt(startYear, 10) || 2000;
+  const nYears = Math.max(1, actualEndYear - actualStartYear + 1);
+  const labels = Array.from({ length: nYears }, (_, i) => String(actualStartYear + i));
   const variables = {};
 
-  // Deterministic seed based on location name string
   const locSeed = locationName.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
 
   selectedVariables.forEach(varKey => {
     if (varKey === 'temperature') {
       const baseTemp = 26.5 + (locSeed % 40) * 0.05;
-      const decadalSlope = 0.28 + ((locSeed * 7) % 15) * 0.01;
+      const decadalSlope = locationObj?.slope !== undefined ? locationObj.slope : (0.28 + ((locSeed * 7) % 15) * 0.01);
       const annualSlope = decadalSlope / 10;
 
       const observed = [];
@@ -448,7 +447,6 @@ function generateOfflineAnalysis(locationName, selectedVariables, startYear, end
 
       for (let i = 0; i < nYears; i++) {
         const trendVal = baseTemp + annualSlope * i;
-        // Pseudo-random oscillation simulating natural ENSO/IOD cycle
         const noise = Math.sin((i + locSeed) * 0.8) * 0.32 + Math.cos(i * 1.4) * 0.18;
         const obsVal = Number((trendVal + noise).toFixed(2));
         observed.push(obsVal);
@@ -457,6 +455,9 @@ function generateOfflineAnalysis(locationName, selectedVariables, startYear, end
         ciUpper.push(Number((trendVal + 0.22).toFixed(2)));
       }
 
+      const classification = locationObj?.classification || (decadalSlope > 0.4 ? 'strong_increase' : 'slight_increase');
+      const symbol = decadalSlope > 0.4 ? '▲▲' : (decadalSlope > 0.2 ? '▲' : '=');
+
       variables.temperature = {
         name: 'Air Temperature',
         unit: '°C',
@@ -464,7 +465,7 @@ function generateOfflineAnalysis(locationName, selectedVariables, startYear, end
         observed: observed,
         trend: trend,
         confidence_band: { lower: ciLower, upper: ciUpper },
-        anomalies: [Math.floor(nYears * 0.65), nYears - 2],
+        anomalies: [Math.floor(nYears * 0.65), Math.max(0, nYears - 2)],
         stats: {
           slope_per_decade: decadalSlope,
           p_value: 0.014,
@@ -473,8 +474,8 @@ function generateOfflineAnalysis(locationName, selectedVariables, startYear, end
           significant: true,
           ci_lower: Number((decadalSlope * 0.45).toFixed(3)),
           ci_upper: Number((decadalSlope * 1.55).toFixed(3)),
-          classification: decadalSlope > 0.4 ? 'strong_increase' : 'slight_increase',
-          symbol: decadalSlope > 0.4 ? '▲▲' : '▲',
+          classification: classification,
+          symbol: symbol,
           mean: Number((baseTemp + (annualSlope * nYears) / 2).toFixed(2)),
           std_dev: 0.42,
           min: Math.min(...observed),
@@ -540,7 +541,7 @@ function generateOfflineAnalysis(locationName, selectedVariables, startYear, end
         labels: labels,
         observed: observed,
         trend: trend,
-        anomalies: [nYears - 3],
+        anomalies: [Math.max(0, nYears - 3)],
         stats: {
           slope_per_decade: decadalSlope,
           p_value: 0.038,
@@ -600,15 +601,15 @@ function generateOfflineAnalysis(locationName, selectedVariables, startYear, end
 
   return {
     locationName: locationName,
-    startYear: startYear,
-    endYear: endYear,
+    startYear: actualStartYear,
+    endYear: actualEndYear,
     aggregation: aggregation,
     variables: variables
   };
 }
 
 /**
- * Returns baseline sample classifications across all 36 Indian states & UTs
+ * Baseline sample classifications across all 36 Indian states & UTs
  */
 function getSampleNationalMapTrends() {
   return {

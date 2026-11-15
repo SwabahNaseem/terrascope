@@ -18,7 +18,6 @@ export function initControls({ onTrendRequested, onVariableChange, onCompareTogg
   const variableCheckboxes = document.querySelectorAll('input[name="variable"]');
   const startYearInput = document.getElementById('start-year-select');
   const endYearInput = document.getElementById('end-year-select');
-  const aggregationSelect = document.getElementById('aggregation-select');
 
   // 1. Variable selection guardrail: At least one variable must remain checked
   variableCheckboxes.forEach((checkbox) => {
@@ -36,22 +35,50 @@ export function initControls({ onTrendRequested, onVariableChange, onCompareTogg
     });
   });
 
-  // 2. Start Year input validation (range: 1981 - 2024)
+  // 2. Start Year input validation (range: 1981 - 2025)
   if (startYearInput) {
     startYearInput.setAttribute('min', '1981');
-    startYearInput.setAttribute('max', '2024');
+    startYearInput.setAttribute('max', '2025');
 
     startYearInput.addEventListener('change', () => {
-      let val = parseInt(startYearInput.value, 10);
-      if (isNaN(val) || val < 1981) val = 1981;
-      if (val > 2024) val = 2024;
-      startYearInput.value = val;
+      let startVal = parseInt(startYearInput.value, 10);
+      if (isNaN(startVal) || startVal < 1981) startVal = 1981;
+      if (startVal > 2025) startVal = 2025;
+      startYearInput.value = startVal;
+
+      // Ensure end year is not earlier than start year
+      if (endYearInput) {
+        let endVal = parseInt(endYearInput.value, 10);
+        if (!isNaN(endVal) && endVal < startVal) {
+          endYearInput.value = startVal;
+        }
+      }
     });
   }
 
-  // 3. Ensure End Year displays latest available data context
-  if (endYearInput && !endYearInput.value) {
-    endYearInput.value = 'Latest (2025)';
+  // 3. End Year input validation (range: 1981 - 2025)
+  if (endYearInput) {
+    endYearInput.removeAttribute('disabled');
+    endYearInput.setAttribute('min', '1981');
+    endYearInput.setAttribute('max', '2025');
+    if (!endYearInput.value || isNaN(parseInt(endYearInput.value, 10))) {
+      endYearInput.value = '2025';
+    }
+
+    endYearInput.addEventListener('change', () => {
+      let endVal = parseInt(endYearInput.value, 10);
+      if (isNaN(endVal) || endVal < 1981) endVal = 1981;
+      if (endVal > 2025) endVal = 2025;
+
+      // Ensure end year is not earlier than start year
+      if (startYearInput) {
+        let startVal = parseInt(startYearInput.value, 10);
+        if (!isNaN(startVal) && endVal < startVal) {
+          endVal = startVal;
+        }
+      }
+      endYearInput.value = endVal;
+    });
   }
 
   // 4. Compare Mode toggle check (dynamically inject if not present in DOM)
@@ -75,6 +102,7 @@ export function initControls({ onTrendRequested, onVariableChange, onCompareTogg
 export function getSelectedOptions() {
   const selectedVariables = getSelectedVariables();
   const startYearInput = document.getElementById('start-year-select');
+  const endYearInput = document.getElementById('end-year-select');
   const aggregationSelect = document.getElementById('aggregation-select');
   const compareToggle = document.getElementById('compare-mode-toggle');
 
@@ -82,13 +110,18 @@ export function getSelectedOptions() {
   if (isNaN(startYear) || startYear < 1981) startYear = 1981;
   if (startYear > 2025) startYear = 2025;
 
+  let endYear = parseInt(endYearInput?.value || '2025', 10);
+  if (isNaN(endYear) || endYear < 1981) endYear = 1981;
+  if (endYear > 2025) endYear = 2025;
+  if (endYear < startYear) endYear = startYear;
+
   const aggregation = aggregationSelect?.value || 'yearly';
   const compareMode = compareToggle ? compareToggle.checked : false;
 
   return {
     variables: selectedVariables.length > 0 ? selectedVariables : ['temperature'],
     startYear: startYear,
-    endYear: 'latest',
+    endYear: endYear,
     aggregation: aggregation,
     compareMode: compareMode
   };
@@ -117,7 +150,7 @@ export function setControlsLoading(isLoading) {
     btnShowTrend.style.opacity = '0.75';
     btnShowTrend.style.cursor = 'not-allowed';
     btnShowTrend.innerHTML = `
-      <span style="display: inline-block; width: 14px; height: 14px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 6px; vertical-align: middle;"></span>
+      <span style="display: inline-block; width: 14px; height: 14px; border: 2px solid var(--cyan, #19C8F2); border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 8px; vertical-align: middle;"></span>
       Analyzing...
     `;
 
@@ -174,7 +207,7 @@ function flashWarning(element, message) {
   if (!element) return;
   element.style.transition = 'transform 0.1s, color 0.2s';
   element.style.transform = 'translateX(4px)';
-  element.style.color = 'var(--accent, #C8643B)';
+  element.style.color = 'var(--orange, #FFAD45)';
 
   setTimeout(() => {
     element.style.transform = 'translateX(-4px)';

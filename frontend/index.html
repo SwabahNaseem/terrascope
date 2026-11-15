@@ -6,7 +6,7 @@
   <title>TerraScope | Earth System Trend Detective (India Edition)</title>
 
   <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
 
   <!-- Design Tokens and Stylesheet -->
   <link rel="stylesheet" href="css/theme.css">
@@ -74,7 +74,7 @@
 
       <div class="control-group">
         <label for="end-year-select">To</label>
-        <input type="text" id="end-year-select" value="Latest (2025)" disabled>
+        <input type="number" id="end-year-select" min="1981" max="2025" value="2025">
       </div>
 
       <!-- Aggregation Interval -->
@@ -109,7 +109,7 @@
             <span>Slight increase</span>
           </div>
           <div class="legend-item">
-            <span class="legend-swatch" style="background-color: var(--trend-neutral); color: #333;">=</span>
+            <span class="legend-swatch" style="background-color: var(--trend-neutral); color: #fff;">=</span>
             <span>No clear change</span>
           </div>
           <div class="legend-item">
@@ -148,7 +148,7 @@
 
         <!-- Statistical Significance Drawer -->
         <details class="charts-wrapper" id="significance-details-drawer">
-          <summary style="cursor: pointer; font-weight: 600; color: var(--primary);">Scientific Methodology &amp; Statistics</summary>
+          <summary style="cursor: pointer; font-weight: 600; color: var(--cyan);">Scientific Methodology &amp; Statistics</summary>
           <div id="significance-details-content" style="margin-top: 12px; font-size: 0.9rem; line-height: 1.6;">
             <!-- Dynamically populated report details -->
           </div>
@@ -164,7 +164,7 @@
   </footer>
 
   <!-- External Libraries -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
   <!-- Modular Frontend Scripts -->

@@ -2,6 +2,7 @@
  * TerraScope Report & Plain-Language Renderer
  * Formats user-facing natural language summaries, accessible direction badges,
  * the 12-point scientific metadata drawer, and client-side Markdown report exports.
+ * Styled to EarthWatch / TerraScope Dark Navy Reference Palette.
  */
 
 /**
@@ -27,7 +28,7 @@ export function renderSummaryCard(locationName, variableName, slopePerDecade, si
   if (headingEl) {
     headingEl.innerHTML = `
       <span>Selected: ${locationName} (${variableName})</span>
-      <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.85rem; padding: 2px 8px; border-radius: 4px; background: rgba(47, 93, 58, 0.12); color: var(--primary, #2F5D3A); font-weight: 700; margin-left: 8px;">
+      <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.85rem; padding: 3px 10px; border-radius: 4px; background: rgba(25, 200, 242, 0.15); color: var(--cyan, #19C8F2); font-weight: 700; border: 1px solid var(--line, #1B3B59); margin-left: 8px;">
         <span>${symbol}</span>
         <span>${stats.classification ? stats.classification.replace(/_/g, ' ').toUpperCase() : 'SLIGHT INCREASE'}</span>
       </span>
@@ -37,11 +38,11 @@ export function renderSummaryCard(locationName, variableName, slopePerDecade, si
   if (cardEl) {
     // Dynamic border color matching direction of change
     if (symbol.includes('▲')) {
-      cardEl.style.borderLeftColor = 'var(--trend-strong-inc, #A8461F)';
+      cardEl.style.borderLeftColor = 'var(--trend-strong-inc, #FF6B58)';
     } else if (symbol.includes('▼')) {
-      cardEl.style.borderLeftColor = 'var(--trend-strong-dec, #2F5D3A)';
+      cardEl.style.borderLeftColor = 'var(--trend-strong-dec, #42D69B)';
     } else {
-      cardEl.style.borderLeftColor = 'var(--trend-neutral, #D9D2BF)';
+      cardEl.style.borderLeftColor = 'var(--trend-neutral, #1B3B59)';
     }
   }
 
@@ -49,7 +50,7 @@ export function renderSummaryCard(locationName, variableName, slopePerDecade, si
     const pValFormatted = typeof stats.pValue === 'number' ? stats.pValue.toFixed(3) : (stats.pValue || '0.012');
 
     if (significant) {
-      textEl.innerHTML = `Between ${startYear} and ${endYear}, ${variableName.toLowerCase()} in ${locationName} went <strong>${direction}</strong> by about <strong>${rateText} ${unit}</strong> per decade. This change is <strong>very unlikely to be due to chance</strong> (p = ${pValFormatted}, Mann-Kendall test).`;
+      textEl.innerHTML = `Between ${startYear} and ${endYear}, ${variableName.toLowerCase()} in ${locationName} went <strong style="color: var(--cyan, #19C8F2);">${direction}</strong> by about <strong style="color: var(--cyan, #19C8F2);">${rateText} ${unit}</strong> per decade. This change is <strong>very unlikely to be due to chance</strong> (p = ${pValFormatted}, Mann-Kendall test).`;
     } else {
       textEl.innerHTML = `${variableName} in ${locationName} fluctuated between ${startYear} and ${endYear}, but there is <strong>no clear long-term trend</strong> (p = ${pValFormatted}). The observed pattern could be normal natural climate variability.`;
     }
@@ -87,53 +88,53 @@ export function renderSignificanceDrawer(stats = {}) {
   container.innerHTML = `
     <table style="width: 100%; border-collapse: collapse; font-family: var(--font-family-mono, monospace); font-size: 0.88rem; line-height: 1.6;">
       <tbody>
-        <tr style="border-bottom: 1px solid var(--border-color, #D6CCA9);">
-          <td style="padding: 6px 8px; font-weight: 600; width: 35%; color: var(--primary, #2F5D3A);">1. Location &amp; Centroid</td>
-          <td style="padding: 6px 8px;">${loc} ${centroid}</td>
+        <tr style="border-bottom: 1px solid var(--line, #1B3B59);">
+          <td style="padding: 8px; font-weight: 600; width: 35%; color: var(--cyan, #19C8F2);">1. Location &amp; Centroid</td>
+          <td style="padding: 8px; color: var(--text, #EDF6FF);">${loc} ${centroid}</td>
         </tr>
-        <tr style="border-bottom: 1px solid var(--border-color, #D6CCA9);">
-          <td style="padding: 6px 8px; font-weight: 600; color: var(--primary, #2F5D3A);">2. Parameter &amp; Metric</td>
-          <td style="padding: 6px 8px;">${varName} (${unit})</td>
+        <tr style="border-bottom: 1px solid var(--line, #1B3B59);">
+          <td style="padding: 8px; font-weight: 600; color: var(--cyan, #19C8F2);">2. Parameter &amp; Metric</td>
+          <td style="padding: 8px; color: var(--text, #EDF6FF);">${varName} (${unit})</td>
         </tr>
-        <tr style="border-bottom: 1px solid var(--border-color, #D6CCA9);">
-          <td style="padding: 6px 8px; font-weight: 600; color: var(--primary, #2F5D3A);">3. Dataset Source &amp; Grid</td>
-          <td style="padding: 6px 8px;">NASA POWER Assimilation (0.5° × 0.5° Native Resolution)</td>
+        <tr style="border-bottom: 1px solid var(--line, #1B3B59);">
+          <td style="padding: 8px; font-weight: 600; color: var(--cyan, #19C8F2);">3. Dataset Source &amp; Grid</td>
+          <td style="padding: 8px; color: var(--text, #EDF6FF);">NASA POWER Assimilation (0.5° × 0.5° Native Resolution)</td>
         </tr>
-        <tr style="border-bottom: 1px solid var(--border-color, #D6CCA9);">
-          <td style="padding: 6px 8px; font-weight: 600; color: var(--primary, #2F5D3A);">4. Period &amp; Sample Size</td>
-          <td style="padding: 6px 8px;">${startYr} – ${endYr} (N = ${nObs} annual observations)</td>
+        <tr style="border-bottom: 1px solid var(--line, #1B3B59);">
+          <td style="padding: 8px; font-weight: 600; color: var(--cyan, #19C8F2);">4. Period &amp; Sample Size</td>
+          <td style="padding: 8px; color: var(--text, #EDF6FF);">${startYr} – ${endYr} (N = ${nObs} annual observations)</td>
         </tr>
-        <tr style="border-bottom: 1px solid var(--border-color, #D6CCA9);">
-          <td style="padding: 6px 8px; font-weight: 600; color: var(--primary, #2F5D3A);">5. Descriptive Statistics</td>
-          <td style="padding: 6px 8px;">Mean: ${meanVal} ${unit} | Std: ${stdVal} | Min: ${minVal} | Max: ${maxVal}</td>
+        <tr style="border-bottom: 1px solid var(--line, #1B3B59);">
+          <td style="padding: 8px; font-weight: 600; color: var(--cyan, #19C8F2);">5. Descriptive Statistics</td>
+          <td style="padding: 8px; color: var(--text, #EDF6FF);">Mean: ${meanVal} ${unit} | Std: ${stdVal} | Min: ${minVal} | Max: ${maxVal}</td>
         </tr>
-        <tr style="border-bottom: 1px solid var(--border-color, #D6CCA9);">
-          <td style="padding: 6px 8px; font-weight: 600; color: var(--primary, #2F5D3A);">6. Mann-Kendall Test</td>
-          <td style="padding: 6px 8px;">Score S = ${sStat}, Standardized Z = ${zScore}, p-value = <strong>${pVal}</strong> (${stats.significant !== false ? 'Significant at α = 0.05' : 'Not Significant'})</td>
+        <tr style="border-bottom: 1px solid var(--line, #1B3B59);">
+          <td style="padding: 8px; font-weight: 600; color: var(--cyan, #19C8F2);">6. Mann-Kendall Test</td>
+          <td style="padding: 8px; color: var(--text, #EDF6FF);">Score S = ${sStat}, Standardized Z = ${zScore}, p-value = <strong style="color: var(--cyan, #19C8F2);">${pVal}</strong> (${stats.significant !== false ? 'Significant at α = 0.05' : 'Not Significant'})</td>
         </tr>
-        <tr style="border-bottom: 1px solid var(--border-color, #D6CCA9);">
-          <td style="padding: 6px 8px; font-weight: 600; color: var(--primary, #2F5D3A);">7. Sen's Slope Estimator</td>
-          <td style="padding: 6px 8px;"><strong>${slopeDecade} ${unit} / decade</strong> (Non-parametric median pairwise slope)</td>
+        <tr style="border-bottom: 1px solid var(--line, #1B3B59);">
+          <td style="padding: 8px; font-weight: 600; color: var(--cyan, #19C8F2);">7. Sen's Slope Estimator</td>
+          <td style="padding: 8px; color: var(--text, #EDF6FF);"><strong style="color: var(--cyan, #19C8F2);">${slopeDecade} ${unit} / decade</strong> (Non-parametric median pairwise slope)</td>
         </tr>
-        <tr style="border-bottom: 1px solid var(--border-color, #D6CCA9);">
-          <td style="padding: 6px 8px; font-weight: 600; color: var(--primary, #2F5D3A);">8. 95% Confidence Interval</td>
-          <td style="padding: 6px 8px;">[${ciLower}, ${ciUpper}] ${unit} / decade</td>
+        <tr style="border-bottom: 1px solid var(--line, #1B3B59);">
+          <td style="padding: 8px; font-weight: 600; color: var(--cyan, #19C8F2);">8. 95% Confidence Interval</td>
+          <td style="padding: 8px; color: var(--text, #EDF6FF);">[${ciLower}, ${ciUpper}] ${unit} / decade</td>
         </tr>
-        <tr style="border-bottom: 1px solid var(--border-color, #D6CCA9);">
-          <td style="padding: 6px 8px; font-weight: 600; color: var(--primary, #2F5D3A);">9. Autocorrelation Treatment</td>
-          <td style="padding: 6px 8px;">Pre-whitened series via Yue-Pilon approach (effective sample size adjusted)</td>
+        <tr style="border-bottom: 1px solid var(--line, #1B3B59);">
+          <td style="padding: 8px; font-weight: 600; color: var(--cyan, #19C8F2);">9. Autocorrelation Treatment</td>
+          <td style="padding: 8px; color: var(--text, #EDF6FF);">Pre-whitened series via Yue-Pilon approach (effective sample size adjusted)</td>
         </tr>
-        <tr style="border-bottom: 1px solid var(--border-color, #D6CCA9);">
-          <td style="padding: 6px 8px; font-weight: 600; color: var(--primary, #2F5D3A);">10. Direction &amp; Tier Class</td>
-          <td style="padding: 6px 8px;"><strong>${symbol} ${classLabel}</strong></td>
+        <tr style="border-bottom: 1px solid var(--line, #1B3B59);">
+          <td style="padding: 8px; font-weight: 600; color: var(--cyan, #19C8F2);">10. Direction &amp; Tier Class</td>
+          <td style="padding: 8px; color: var(--text, #EDF6FF);"><strong style="color: var(--cyan, #19C8F2);">${symbol} ${classLabel}</strong></td>
         </tr>
-        <tr style="border-bottom: 1px solid var(--border-color, #D6CCA9);">
-          <td style="padding: 6px 8px; font-weight: 600; color: var(--primary, #2F5D3A);">11. Spatial Limitations</td>
-          <td style="padding: 6px 8px;">Coarse grid cell assimilation (~50 km); complex coastal and Western Ghats topography smoothed across regional boundary.</td>
+        <tr style="border-bottom: 1px solid var(--line, #1B3B59);">
+          <td style="padding: 8px; font-weight: 600; color: var(--cyan, #19C8F2);">11. Spatial Limitations</td>
+          <td style="padding: 8px; color: var(--text, #EDF6FF);">Coarse grid cell assimilation (~50 km); complex coastal and Western Ghats topography smoothed across regional boundary.</td>
         </tr>
         <tr>
-          <td style="padding: 6px 8px; font-weight: 600; color: var(--primary, #2F5D3A);">12. Attribution &amp; Disclaimer</td>
-          <td style="padding: 6px 8px;">Empirical monotonic trend detection evaluates statistical trajectories; it does not constitute dynamic causal attribution to specific anthropogenic or planetary forcing mechanisms.</td>
+          <td style="padding: 8px; font-weight: 600; color: var(--cyan, #19C8F2);">12. Attribution &amp; Disclaimer</td>
+          <td style="padding: 8px; color: var(--muted, #9BB0C5);">Empirical monotonic trend detection evaluates statistical trajectories; it does not constitute dynamic causal attribution to specific planetary forcing mechanisms.</td>
         </tr>
       </tbody>
     </table>
@@ -211,8 +212,8 @@ Between **${startYr}** and **${endYr}**, ${varName.toLowerCase()} in **${loc}** 
 ---
 
 ## 3. Climatological Context & Caveats
-1. **Resolution & Representation**: NASA POWER assimilates satellite-derived radiative flux and GEOS assimilation model outputs onto a 0.5° × 0.5° regular grid. Local microclimates (such as high-altitude tea plantations or immediate coastal zones) are averaged within the 50 km grid cells.
-2. **Non-Causality Disclaimer**: Trend detection demonstrates monotonic change over time; it does not isolate individual driver fractions (e.g. land-use transformation vs greenhouse warming vs ENSO oscillations).
+1. **Resolution & Representation**: NASA POWER assimilates satellite-derived radiative flux and GEOS assimilation model outputs onto a 0.5° × 0.5° regular grid. Local microclimates are averaged within the 50 km grid cells.
+2. **Non-Causality Disclaimer**: Trend detection demonstrates monotonic change over time; it does not isolate individual driver fractions.
 
 ---
 *TerraScope India Edition &bull; NASA Global Challenge / Space Apps &bull; Powered by NASA Earth Science Open Data*

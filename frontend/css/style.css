@@ -1,5 +1,6 @@
 /**
  * TerraScope Base Styles & Component Layouts
+ * Styled to EarthWatch / TerraScope Dark Navy Reference Palette
  */
 
 * {
@@ -10,8 +11,8 @@
 
 body {
   font-family: var(--font-family-base);
-  background-color: var(--bg-base);
-  color: var(--text-main);
+  background-color: var(--bg);
+  color: var(--text);
   line-height: 1.5;
   min-height: 100vh;
   display: flex;
@@ -24,8 +25,9 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: var(--space-md) var(--space-xl);
-  background-color: var(--primary);
-  color: var(--text-light);
+  background-color: var(--panel);
+  border-bottom: 1px solid var(--line);
+  color: var(--text);
   box-shadow: var(--shadow-sm);
 }
 
@@ -36,6 +38,11 @@ body {
   font-size: 1.4rem;
   font-weight: 700;
   letter-spacing: -0.5px;
+  color: var(--cyan);
+}
+
+.navbar-brand svg {
+  stroke: var(--cyan);
 }
 
 .navbar-search {
@@ -49,17 +56,21 @@ body {
   width: 100%;
   padding: 10px 16px;
   border-radius: var(--radius-md);
-  border: 1px solid transparent;
-  background-color: var(--bg-base);
-  color: var(--text-main);
+  border: 1px solid var(--line);
+  background-color: var(--panel2);
+  color: var(--text);
   font-size: 0.95rem;
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
+.navbar-search input::placeholder {
+  color: var(--muted);
+}
+
 .navbar-search input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(200, 100, 59, 0.25);
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 3px rgba(25, 200, 242, 0.25);
 }
 
 .search-dropdown {
@@ -67,30 +78,40 @@ body {
   top: 100%;
   left: 0;
   right: 0;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: var(--panel2);
+  border: 1px solid var(--line);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-lg);
   margin-top: 4px;
   z-index: 1000;
   display: none;
+  overflow: hidden;
 }
 
 .search-dropdown.active {
   display: block;
 }
 
+.navbar-links {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
 .navbar-links a {
-  color: var(--text-light);
+  color: var(--text);
   text-decoration: none;
   font-weight: 500;
   padding: 8px 14px;
   border-radius: var(--radius-sm);
-  transition: background-color 0.2s;
+  background-color: var(--panel2);
+  border: 1px solid var(--line);
+  transition: background-color 0.2s, color 0.2s;
 }
 
 .navbar-links a:hover {
-  background-color: rgba(255, 255, 255, 0.15);
+  background-color: var(--line);
+  color: var(--cyan);
 }
 
 /* Main Dashboard Layout */
@@ -107,8 +128,8 @@ body {
 /* Controls Sidebar */
 .sidebar-controls {
   width: 340px;
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background-color: var(--panel);
+  border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   padding: var(--space-lg);
   display: flex;
@@ -120,9 +141,10 @@ body {
 
 .sidebar-controls h2 {
   font-size: 1.15rem;
-  color: var(--primary);
-  border-bottom: 2px solid var(--border-color);
+  color: var(--cyan);
+  border-bottom: 2px solid var(--line);
   padding-bottom: var(--space-xs);
+  letter-spacing: 0.3px;
 }
 
 .control-group {
@@ -134,12 +156,21 @@ body {
 .control-group label {
   font-size: 0.9rem;
   font-weight: 600;
+  color: var(--text);
+}
+
+.control-group legend label {
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .checkbox-list {
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
+  margin-top: 4px;
 }
 
 .checkbox-item {
@@ -147,6 +178,14 @@ body {
   align-items: center;
   gap: var(--space-sm);
   font-size: 0.9rem;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.checkbox-item input[type="checkbox"] {
+  accent-color: var(--cyan);
+  width: 16px;
+  height: 16px;
   cursor: pointer;
 }
 
@@ -156,30 +195,45 @@ body {
   gap: var(--space-sm);
 }
 
-.date-inputs input, select {
-  padding: 8px;
+.date-inputs input, select, input[type="number"] {
+  padding: 8px 12px;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--border-color);
-  background-color: var(--bg-base);
-  color: var(--text-main);
+  border: 1px solid var(--line);
+  background-color: var(--panel2);
+  color: var(--text);
   font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.date-inputs input:focus, select:focus, input[type="number"]:focus {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 2px rgba(25, 200, 242, 0.2);
 }
 
 .btn-primary {
-  background-color: var(--primary);
-  color: var(--text-light);
+  background-color: var(--blue);
+  color: #fff;
   border: none;
   padding: 12px;
   border-radius: var(--radius-md);
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, transform 0.1s;
   margin-top: var(--space-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(37, 139, 255, 0.25);
 }
 
 .btn-primary:hover {
-  background-color: var(--primary-hover);
+  background-color: #1a75dd;
+}
+
+.btn-primary:active {
+  transform: translateY(1px);
 }
 
 /* Main Content Area */
@@ -188,23 +242,26 @@ body {
   display: flex;
   flex-direction: column;
   gap: var(--space-lg);
+  min-width: 0;
 }
 
 /* Map Card */
 .map-card {
   position: relative;
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background-color: var(--panel);
+  border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
   height: 520px;
+  min-height: 520px;
 }
 
 #map-view {
   width: 100%;
   height: 100%;
-  background-color: #E6EAE1;
+  min-height: 520px;
+  background-color: var(--bg);
 }
 
 /* Map Legend Overlay */
@@ -212,19 +269,22 @@ body {
   position: absolute;
   bottom: 20px;
   right: 20px;
-  background: var(--bg-base);
-  border: 1px solid var(--border-color);
+  background: rgba(16, 36, 59, 0.94);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--line);
   border-radius: var(--radius-md);
   padding: var(--space-sm) var(--space-md);
   box-shadow: var(--shadow-md);
   z-index: 800;
   max-width: 260px;
+  color: var(--text);
 }
 
 .map-legend-overlay h4 {
-  font-size: 0.85rem;
-  color: var(--text-muted);
+  font-size: 0.8rem;
+  color: var(--muted);
   text-transform: uppercase;
+  letter-spacing: 0.5px;
   margin-bottom: var(--space-xs);
 }
 
@@ -233,20 +293,24 @@ body {
   align-items: center;
   gap: var(--space-sm);
   font-size: 0.85rem;
-  margin-bottom: 3px;
+  margin-bottom: 4px;
+  color: var(--text);
+  border-radius: 4px;
+  padding: 2px 4px;
 }
 
 .legend-swatch {
-  width: 18px;
-  height: 18px;
-  border-radius: 3px;
-  border: 1px solid rgba(0, 0, 0, 0.15);
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-size: 10px;
   font-weight: bold;
   color: #fff;
+  flex-shrink: 0;
 }
 
 /* Analytics Stage (Active State View) */
@@ -261,21 +325,34 @@ body {
 }
 
 .summary-card {
-  background-color: var(--bg-card);
-  border-left: 6px solid var(--accent);
+  background-color: var(--panel);
+  border: 1px solid var(--line);
+  border-left: 6px solid var(--cyan);
   border-radius: var(--radius-md);
   padding: var(--space-md) var(--space-lg);
   box-shadow: var(--shadow-sm);
 }
 
 .summary-card h3 {
-  color: var(--primary);
+  color: var(--cyan);
   margin-bottom: var(--space-xs);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.summary-card p {
+  color: var(--text);
+  line-height: 1.6;
+}
+
+.summary-card strong {
+  color: var(--cyan);
 }
 
 .charts-wrapper {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background-color: var(--panel);
+  border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   padding: var(--space-lg);
   box-shadow: var(--shadow-sm);
@@ -288,18 +365,66 @@ body {
   margin-bottom: var(--space-md);
 }
 
+.chart-header h3 {
+  color: var(--text);
+  font-size: 1.1rem;
+}
+
+#btn-download-report {
+  background-color: var(--panel2);
+  border: 1px solid var(--line);
+  color: var(--cyan);
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+#btn-download-report:hover {
+  background-color: var(--line);
+  color: var(--text);
+}
+
 .chart-canvas-container {
   height: 340px;
   width: 100%;
+}
+
+/* Scientific Methodology Details Drawer */
+#significance-details-drawer {
+  background-color: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+}
+
+#significance-details-drawer summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--cyan);
+  outline: none;
+}
+
+#significance-details-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
+
+#significance-details-content td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--line);
+  color: var(--text);
 }
 
 /* Footer */
 footer {
   text-align: center;
   padding: var(--space-md);
-  background-color: var(--bg-card);
-  border-top: 1px solid var(--border-color);
-  color: var(--text-muted);
+  background-color: var(--panel);
+  border-top: 1px solid var(--line);
+  color: var(--muted);
   font-size: 0.85rem;
 }
 

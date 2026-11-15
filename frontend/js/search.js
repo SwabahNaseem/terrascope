@@ -2,6 +2,7 @@
  * TerraScope Search & Autocomplete Module
  * Handles debounced typing, local fuzzy suggestions, geocoding selection,
  * and keyboard navigation for Indian states, union territories, and districts.
+ * Styled to EarthWatch / TerraScope Dark Navy Reference Palette.
  */
 
 const LOCAL_INDIAN_LOCATIONS = [
@@ -175,7 +176,7 @@ async function performSearch(query, inputEl, dropdownEl, onSelect) {
   if (currentResults.length < 3) {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 900);
+      const timeoutId = setTimeout(() => controller.abort(), 800);
       const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`, {
         signal: controller.signal
       });
@@ -215,7 +216,7 @@ function renderSuggestions(results, query, inputEl, dropdownEl, onSelect) {
     const noResults = document.createElement('div');
     noResults.style.padding = '10px 14px';
     noResults.style.fontSize = '0.9rem';
-    noResults.style.color = 'var(--text-muted, #6B7052)';
+    noResults.style.color = 'var(--muted, #9BB0C5)';
     noResults.textContent = `No Indian state or district matching "${query}"`;
     dropdownEl.appendChild(noResults);
     openDropdown(inputEl, dropdownEl);
@@ -229,11 +230,12 @@ function renderSuggestions(results, query, inputEl, dropdownEl, onSelect) {
     item.setAttribute('id', `search-opt-${index}`);
     item.style.padding = '9px 14px';
     item.style.cursor = 'pointer';
-    item.style.borderBottom = '1px solid rgba(214, 204, 169, 0.4)';
+    item.style.borderBottom = '1px solid var(--line, #1B3B59)';
     item.style.display = 'flex';
     item.style.justifyContent = 'space-between';
     item.style.alignItems = 'center';
     item.style.fontSize = '0.9rem';
+    item.style.color = 'var(--text, #EDF6FF)';
 
     const labelContainer = document.createElement('div');
     const highlightedName = highlightMatch(loc.name, query);
@@ -242,7 +244,7 @@ function renderSuggestions(results, query, inputEl, dropdownEl, onSelect) {
     if (loc.parent) {
       const parentSpan = document.createElement('span');
       parentSpan.style.fontSize = '0.75rem';
-      parentSpan.style.color = 'var(--text-muted, #6B7052)';
+      parentSpan.style.color = 'var(--muted, #9BB0C5)';
       parentSpan.style.marginLeft = '6px';
       parentSpan.textContent = `(${loc.parent})`;
       labelContainer.appendChild(parentSpan);
@@ -250,10 +252,11 @@ function renderSuggestions(results, query, inputEl, dropdownEl, onSelect) {
 
     const typeBadge = document.createElement('span');
     typeBadge.style.fontSize = '0.75rem';
-    typeBadge.style.padding = '2px 6px';
+    typeBadge.style.padding = '2px 8px';
     typeBadge.style.borderRadius = '4px';
-    typeBadge.style.backgroundColor = 'rgba(47, 93, 58, 0.12)';
-    typeBadge.style.color = 'var(--primary, #2F5D3A)';
+    typeBadge.style.backgroundColor = 'rgba(25, 200, 242, 0.15)';
+    typeBadge.style.color = 'var(--cyan, #19C8F2)';
+    typeBadge.style.border = '1px solid var(--line, #1B3B59)';
     typeBadge.style.fontWeight = '600';
     typeBadge.textContent = loc.type.toUpperCase();
 
@@ -300,7 +303,7 @@ function updateHighlight(dropdownEl) {
   const items = dropdownEl.querySelectorAll('.search-item');
   items.forEach((item, idx) => {
     if (idx === currentHighlightedIndex) {
-      item.style.backgroundColor = 'var(--bg-card-hover, #E7DDCA)';
+      item.style.backgroundColor = 'rgba(37, 139, 255, 0.2)';
       item.setAttribute('aria-selected', 'true');
       item.scrollIntoView({ block: 'nearest' });
     } else {
@@ -318,7 +321,7 @@ function highlightMatch(text, query) {
   const match = escapeHtml(text.slice(idx, idx + query.length));
   const after = escapeHtml(text.slice(idx + query.length));
 
-  return `${before}<strong style="color: var(--accent, #C8643B); text-decoration: underline;">${match}</strong>${after}`;
+  return `${before}<strong style="color: var(--cyan, #19C8F2); text-decoration: underline;">${match}</strong>${after}`;
 }
 
 function openDropdown(inputEl, dropdownEl) {

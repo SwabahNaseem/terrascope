@@ -1,39 +1,41 @@
 /**
  * TerraScope Charting Module
- * Wraps Chart.js to render observed time series, Sen's slope secular trend line,
- * 95% confidence interval uncertainty bands, anomaly callouts, and multi-variable normalized compare mode.
+ * Wraps Chart.js (with native HTML5 Canvas 2D fallback) to render observed time series,
+ * Sen's slope secular trend line, 95% confidence interval uncertainty bands, anomaly callouts,
+ * and multi-variable normalized compare mode.
+ * Styled to EarthWatch / TerraScope Dark Navy Reference Palette.
  */
 
 // Active Chart.js instances registry
 let activeCharts = [];
 
-// Palette for multi-variable plotting
+// Palette for multi-variable plotting matching Reference Palette
 const VARIABLE_PALETTES = {
   temperature: {
-    color: '#2F5D3A',       // Forest Green
-    bgColor: 'rgba(47, 93, 58, 0.1)',
-    trendColor: '#C8643B',  // Terracotta
+    color: '#19C8F2',       // Bright Cyan (--cyan)
+    bgColor: 'rgba(25, 200, 242, 0.12)',
+    trendColor: '#FFAD45',  // Orange (--orange)
     label: 'Air Temperature',
     unit: '°C'
   },
   precipitation: {
-    color: '#3B6E8C',       // Ocean Slate Blue
-    bgColor: 'rgba(59, 110, 140, 0.1)',
-    trendColor: '#D97724',  // Amber
+    color: '#258BFF',       // Bright Blue (--blue)
+    bgColor: 'rgba(37, 139, 255, 0.12)',
+    trendColor: '#FF6B58',  // Coral Red (--red)
     label: 'Rainfall',
     unit: 'mm'
   },
   soil_moisture: {
-    color: '#706E3B',       // Olive Bronze
-    bgColor: 'rgba(112, 110, 59, 0.1)',
-    trendColor: '#B85042',  // Rust
+    color: '#42D69B',       // Green (--green)
+    bgColor: 'rgba(66, 214, 155, 0.12)',
+    trendColor: '#FFAD45',  // Orange (--orange)
     label: 'Soil Wetness',
     unit: 'fraction (0–1)'
   },
   water_surface: {
-    color: '#3E8E7E',       // Teal
-    bgColor: 'rgba(62, 142, 126, 0.1)',
-    trendColor: '#E27D60',  // Coral
+    color: '#19C8F2',       // Bright Cyan (--cyan)
+    bgColor: 'rgba(25, 200, 242, 0.12)',
+    trendColor: '#258BFF',  // Bright Blue (--blue)
     label: 'Water Surface',
     unit: 'fraction (0–1)'
   }
@@ -45,30 +47,35 @@ const VARIABLE_PALETTES = {
  */
 export function renderChart(canvasId, labels, dataPoints, trendPoints, variableName, unit, options = {}) {
   const canvas = document.getElementById(canvasId);
-  if (!canvas || typeof Chart === 'undefined') {
-    console.warn('[TerraScope Charts] Canvas element or Chart.js not available.');
+  if (!canvas) {
+    console.warn('[TerraScope Charts] Canvas element not found:', canvasId);
     return null;
   }
 
   // Destroy existing chart on this canvas
   const existingIndex = activeCharts.findIndex(c => c.canvas === canvas);
   if (existingIndex !== -1) {
-    activeCharts[existingIndex].destroy();
+    try { activeCharts[existingIndex].destroy(); } catch {}
     activeCharts.splice(existingIndex, 1);
   }
 
-  const ctx = canvas.getContext('2d');
   const palette = getVariablePalette(options.variableKey || variableName);
-
-  // Compute confidence interval bounds if provided or generate realistic 95% bounds
   const ciBands = options.confidenceBand || generateDefaultCIBand(dataPoints, trendPoints);
   const anomalies = options.anomalies || detectAnomalousIndices(dataPoints);
 
+  // If Chart.js CDN is unavailable, use Canvas 2D fallback
+  if (typeof Chart === 'undefined') {
+    renderCanvas2DFallback(canvas, labels, dataPoints, trendPoints, ciBands, anomalies, variableName, unit, palette);
+    return { isFallback: true };
+  }
+
+  const ctx = canvas.getContext('2d');
+
   // Point styling with anomaly highlights
   const pointRadii = dataPoints.map((_, i) => anomalies.includes(i) ? 6 : 4);
-  const pointBorderColors = dataPoints.map((_, i) => anomalies.includes(i) ? '#C8643B' : palette.color);
+  const pointBorderColors = dataPoints.map((_, i) => anomalies.includes(i) ? '#FF6B58' : palette.color);
   const pointBorderWidths = dataPoints.map((_, i) => anomalies.includes(i) ? 2.5 : 1);
-  const pointBgColors = dataPoints.map((_, i) => anomalies.includes(i) ? '#FAF6EC' : palette.color);
+  const pointBgColors = dataPoints.map((_, i) => anomalies.includes(i) ? '#10243B' : palette.color);
 
   const datasets = [
     // 1. Observed Series
@@ -99,7 +106,7 @@ export function renderChart(canvasId, labels, dataPoints, trendPoints, variableN
     }
   ];
 
-  // 3. Shaded 95% Confidence Interval Envelope (if available)
+  // 3. Shaded 95% Confidence Interval Envelope
   if (ciBands && ciBands.lower && ciBands.upper) {
     datasets.push(
       {
@@ -115,9 +122,9 @@ export function renderChart(canvasId, labels, dataPoints, trendPoints, variableN
         label: '95% CI Envelope',
         data: ciBands.upper,
         borderColor: 'transparent',
-        backgroundColor: 'rgba(200, 100, 59, 0.12)',
+        backgroundColor: 'rgba(25, 200, 242, 0.10)',
         pointRadius: 0,
-        fill: '-1', // Fill down to the Lower Bound dataset
+        fill: '-1',
         order: 3
       }
     );
@@ -140,16 +147,17 @@ export function renderChart(canvasId, labels, dataPoints, trendPoints, variableN
         legend: {
           position: 'top',
           labels: {
+            color: '#EDF6FF',
             boxWidth: 14,
             usePointStyle: true,
             filter: (legendItem) => !legendItem.text.includes('Bound')
           }
         },
         tooltip: {
-          backgroundColor: '#3B3F1F',
-          titleColor: '#FAF6EC',
-          bodyColor: '#FAF6EC',
-          borderColor: '#D6CCA9',
+          backgroundColor: '#10243B',
+          titleColor: '#19C8F2',
+          bodyColor: '#EDF6FF',
+          borderColor: '#1B3B59',
           borderWidth: 1,
           padding: 10,
           callbacks: {
@@ -168,28 +176,28 @@ export function renderChart(canvasId, labels, dataPoints, trendPoints, variableN
           title: {
             display: true,
             text: `${variableName} (${unit})`,
-            color: '#3B3F1F',
+            color: '#EDF6FF',
             font: { weight: '600', size: 12 }
           },
           grid: {
-            color: 'rgba(214, 204, 169, 0.35)'
+            color: 'rgba(27, 59, 89, 0.5)'
           },
           ticks: {
-            color: '#6B7052'
+            color: '#9BB0C5'
           }
         },
         x: {
           title: {
             display: true,
             text: 'Year',
-            color: '#3B3F1F',
+            color: '#EDF6FF',
             font: { weight: '600', size: 12 }
           },
           grid: {
-            color: 'rgba(214, 204, 169, 0.2)'
+            color: 'rgba(27, 59, 89, 0.3)'
           },
           ticks: {
-            color: '#6B7052'
+            color: '#9BB0C5'
           }
         }
       }
@@ -201,31 +209,130 @@ export function renderChart(canvasId, labels, dataPoints, trendPoints, variableN
 }
 
 /**
+ * Native Canvas 2D Fallback Renderer when Chart.js CDN is unavailable
+ */
+function renderCanvas2DFallback(canvas, labels, data, trend, ciBands, anomalies, varName, unit, palette) {
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const width = rect.width || 700;
+  const height = rect.height || 340;
+
+  canvas.width = width * dpr;
+  canvas.height = height * dpr;
+  ctx.scale(dpr, dpr);
+
+  ctx.fillStyle = '#0C1D31';
+  ctx.fillRect(0, 0, width, height);
+
+  const padding = { top: 40, right: 30, bottom: 50, left: 60 };
+  const plotW = width - padding.left - padding.right;
+  const plotH = height - padding.top - padding.bottom;
+
+  const allVals = [...data, ...trend, ...(ciBands?.lower || []), ...(ciBands?.upper || [])];
+  const minVal = Math.min(...allVals);
+  const maxVal = Math.max(...allVals);
+  const range = (maxVal - minVal) || 1;
+
+  const getX = (i) => padding.left + (i / (data.length - 1)) * plotW;
+  const getY = (v) => padding.top + plotH - ((v - minVal) / range) * plotH;
+
+  // Grid & Y-Ticks
+  ctx.strokeStyle = 'rgba(27, 59, 89, 0.6)';
+  ctx.fillStyle = '#9BB0C5';
+  ctx.font = '11px sans-serif';
+  ctx.textAlign = 'right';
+
+  for (let s = 0; s <= 5; s++) {
+    const val = minVal + (s / 5) * range;
+    const y = getY(val);
+    ctx.beginPath();
+    ctx.moveTo(padding.left, y);
+    ctx.lineTo(width - padding.right, y);
+    ctx.stroke();
+    ctx.fillText(val.toFixed(1), padding.left - 8, y + 4);
+  }
+
+  // X-Ticks
+  ctx.textAlign = 'center';
+  const step = Math.max(1, Math.floor(labels.length / 8));
+  for (let i = 0; i < labels.length; i += step) {
+    const x = getX(i);
+    ctx.fillText(labels[i], x, height - padding.bottom + 20);
+  }
+
+  // CI Band Fill
+  if (ciBands && ciBands.lower && ciBands.upper) {
+    ctx.fillStyle = 'rgba(25, 200, 242, 0.10)';
+    ctx.beginPath();
+    ctx.moveTo(getX(0), getY(ciBands.upper[0]));
+    for (let i = 1; i < data.length; i++) ctx.lineTo(getX(i), getY(ciBands.upper[i]));
+    for (let i = data.length - 1; i >= 0; i--) ctx.lineTo(getX(i), getY(ciBands.lower[i]));
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Sen's Trend Line (Dashed)
+  ctx.strokeStyle = palette.trendColor;
+  ctx.lineWidth = 2.5;
+  ctx.setLineDash([6, 4]);
+  ctx.beginPath();
+  ctx.moveTo(getX(0), getY(trend[0]));
+  for (let i = 1; i < trend.length; i++) ctx.lineTo(getX(i), getY(trend[i]));
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Observed Line
+  ctx.strokeStyle = palette.color;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(getX(0), getY(data[0]));
+  for (let i = 1; i < data.length; i++) ctx.lineTo(getX(i), getY(data[i]));
+  ctx.stroke();
+
+  // Observed Points
+  for (let i = 0; i < data.length; i++) {
+    const isAnomaly = anomalies.includes(i);
+    ctx.fillStyle = isAnomaly ? '#10243B' : palette.color;
+    ctx.strokeStyle = isAnomaly ? '#FF6B58' : palette.color;
+    ctx.lineWidth = isAnomaly ? 2.5 : 1;
+    ctx.beginPath();
+    ctx.arc(getX(i), getY(data[i]), isAnomaly ? 6 : 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  // Legend
+  ctx.fillStyle = palette.color;
+  ctx.fillRect(padding.left, 14, 12, 12);
+  ctx.fillStyle = '#EDF6FF';
+  ctx.textAlign = 'left';
+  ctx.fillText(`Observed ${varName} (${unit})`, padding.left + 18, 24);
+
+  ctx.fillStyle = palette.trendColor;
+  ctx.fillRect(padding.left + 220, 14, 12, 12);
+  ctx.fillStyle = '#EDF6FF';
+  ctx.fillText(`Secular Trend`, padding.left + 238, 24);
+}
+
+/**
  * Renders multiple variable charts (either stacked cards or unified normalized compare mode)
  * @param {string} mainCanvasId - Primary chart canvas ID
- * @param {Object} variablesData - Keyed map of variables { temperature: {...}, precipitation: {...} }
+ * @param {Object} variablesData - Keyed map of variables
  * @param {boolean} compareMode - When true, normalizes curves to [0, 1] on a single canvas
  */
 export function renderMultiVariableCharts(mainCanvasId, variablesData, compareMode = false) {
   destroyAllCharts();
 
   const mainCanvas = document.getElementById(mainCanvasId);
-  const container = mainCanvas ? mainCanvas.parentElement : null;
-  if (!container || !variablesData) return;
+  if (!mainCanvas || !variablesData) return;
 
   const varKeys = Object.keys(variablesData);
   if (varKeys.length === 0) return;
 
   if (compareMode && varKeys.length > 1) {
-    // -------------------------------------------------------------
-    // COMPARE MODE: Overlay all variables normalized onto [0, 1]
-    // Formula: x_norm = (x - x_min) / (x_max - x_min)
-    // -------------------------------------------------------------
     renderNormalizedComparisonChart(mainCanvasId, variablesData);
   } else {
-    // -------------------------------------------------------------
-    // STACKED / MULTI-CARD MODE: Dedicated chart per variable
-    // -------------------------------------------------------------
     renderStackedVariableCharts(mainCanvasId, variablesData);
   }
 }
@@ -237,10 +344,27 @@ function renderNormalizedComparisonChart(canvasId, variablesData) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
 
-  const ctx = canvas.getContext('2d');
   const varKeys = Object.keys(variablesData);
   const labels = variablesData[varKeys[0]].labels;
 
+  if (typeof Chart === 'undefined') {
+    // Canvas 2D fallback for compare mode
+    const normDataMap = {};
+    varKeys.forEach(k => {
+      normDataMap[k] = {
+        name: variablesData[k].name,
+        observed: normalizeMinMax(variablesData[k].observed),
+        trend: normalizeMinMax(variablesData[k].trend, variablesData[k].observed)
+      };
+    });
+    renderCanvas2DFallback(
+      canvas, labels, normDataMap[varKeys[0]].observed, normDataMap[varKeys[0]].trend,
+      null, [], 'Normalized Comparison', '0-1 scale', getVariablePalette(varKeys[0])
+    );
+    return;
+  }
+
+  const ctx = canvas.getContext('2d');
   const datasets = [];
 
   varKeys.forEach((key) => {
@@ -284,9 +408,13 @@ function renderNormalizedComparisonChart(canvasId, variablesData) {
       plugins: {
         legend: {
           position: 'top',
-          labels: { boxWidth: 12, usePointStyle: true }
+          labels: { color: '#EDF6FF', boxWidth: 12, usePointStyle: true }
         },
         tooltip: {
+          backgroundColor: '#10243B',
+          titleColor: '#19C8F2',
+          bodyColor: '#EDF6FF',
+          borderColor: '#1B3B59',
           callbacks: {
             label: function (ctx) {
               return `${ctx.dataset.label}: ${ctx.raw.toFixed(2)}`;
@@ -301,14 +429,16 @@ function renderNormalizedComparisonChart(canvasId, variablesData) {
           title: {
             display: true,
             text: 'Normalized Relative Scale [0 to 1]',
-            color: '#3B3F1F',
+            color: '#EDF6FF',
             font: { weight: '600' }
           },
-          grid: { color: 'rgba(214, 204, 169, 0.35)' }
+          grid: { color: 'rgba(27, 59, 89, 0.5)' },
+          ticks: { color: '#9BB0C5' }
         },
         x: {
-          title: { display: true, text: 'Year', color: '#3B3F1F' },
-          grid: { color: 'rgba(214, 204, 169, 0.2)' }
+          title: { display: true, text: 'Year', color: '#EDF6FF' },
+          grid: { color: 'rgba(27, 59, 89, 0.3)' },
+          ticks: { color: '#9BB0C5' }
         }
       }
     }

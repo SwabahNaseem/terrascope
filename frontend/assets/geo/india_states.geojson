@@ -1,81 +1,294 @@
 {
   "type": "FeatureCollection",
-  "name": "india_states_simplified",
+  "name": "india_states_all_36",
   "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
   "features": [
     {
       "type": "Feature",
-      "properties": {
-        "id": "IN-KL",
-        "name": "Kerala",
-        "state_code": "KL",
-        "type": "State"
-      },
+      "properties": { "id": "IN-KL", "name": "Kerala", "state_code": "KL", "type": "State" },
       "geometry": {
         "type": "Polygon",
-        "coordinates": [
-          [
-            [74.85, 12.80],
-            [75.40, 12.10],
-            [76.05, 11.75],
-            [76.75, 11.20],
-            [77.40, 10.15],
-            [77.20, 8.50],
-            [76.90, 8.30],
-            [76.20, 9.50],
-            [75.80, 10.50],
-            [75.20, 11.80],
-            [74.85, 12.80]
-          ]
-        ]
+        "coordinates": [[[74.85, 12.80], [75.40, 12.10], [76.05, 11.75], [76.75, 11.20], [77.40, 10.15], [77.20, 8.50], [76.90, 8.30], [76.20, 9.50], [75.80, 10.50], [75.20, 11.80], [74.85, 12.80]]]
       }
     },
     {
       "type": "Feature",
-      "properties": {
-        "id": "IN-TN",
-        "name": "Tamil Nadu",
-        "state_code": "TN",
-        "type": "State"
-      },
+      "properties": { "id": "IN-TN", "name": "Tamil Nadu", "state_code": "TN", "type": "State" },
       "geometry": {
         "type": "Polygon",
-        "coordinates": [
-          [
-            [77.20, 8.50],
-            [77.40, 10.15],
-            [76.75, 11.20],
-            [77.50, 12.80],
-            [80.30, 13.50],
-            [79.80, 10.30],
-            [78.20, 9.10],
-            [77.55, 8.10],
-            [77.20, 8.50]
-          ]
-        ]
+        "coordinates": [[[77.20, 8.50], [77.40, 10.15], [76.75, 11.20], [77.50, 12.80], [80.30, 13.50], [79.80, 10.30], [78.20, 9.10], [77.55, 8.10], [77.20, 8.50]]]
       }
     },
     {
       "type": "Feature",
-      "properties": {
-        "id": "IN-KA",
-        "name": "Karnataka",
-        "state_code": "KA",
-        "type": "State"
-      },
+      "properties": { "id": "IN-KA", "name": "Karnataka", "state_code": "KA", "type": "State" },
       "geometry": {
         "type": "Polygon",
-        "coordinates": [
-          [
-            [74.10, 15.00],
-            [75.50, 17.50],
-            [77.50, 18.00],
-            [77.50, 12.80],
-            [76.05, 11.75],
-            [74.85, 12.80],
-            [74.10, 15.00]
-          ]
-        ]
+        "coordinates": [[[74.10, 15.00], [75.50, 17.50], [77.50, 18.00], [77.50, 12.80], [76.05, 11.75], [74.85, 12.80], [74.10, 15.00]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "IN-AP", "name": "Andhra Pradesh", "state_code": "AP", "type": "State" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[77.50, 12.80], [77.50, 15.50], [79.50, 16.00], [83.50, 18.50], [82.50, 17.00], [80.30, 13.50], [77.50, 12.80]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "IN-TG", "name": "Telangana", "state_code": "TG", "type": "State" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[77.50, 15.50], [77.50, 18.00], [79.00, 19.80], [80.80, 18.80], [80.50, 16.80], [79.50, 16.00], [77.50, 15.50]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "IN-MH", "name": "Maharashtra", "state_code": "MH", "type": "State" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[72.65, 18.90], [73.20, 20.20], [76.50, 21.50], [80.30, 21.20], [79.50, 19.00], [77.50, 18.00], [74.10, 15.00], [73.50, 16.00], [72.65, 18.90]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "IN-GA", "name": "Goa", "state_code": "GA", "type": "State" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[73.65, 15.75], [74.30, 15.75], [74.20, 14.85], [73.70, 14.90], [73.65, 15.75]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "IN-GJ", "name": "Gujarat", "state_code": "GJ", "type": "State" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[69.00, 22.00], [68.20, 23.50], [71.00, 24.50], [74.20, 24.00], [74.00, 22.00], [73.20, 20.20], [70.50, 20.80], [69.00, 22.00]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "IN-RJ", "name": "Rajasthan", "state_code": "RJ", "type": "State" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[70.00, 26.50], [70.50, 28.50], [73.00, 30.00], [77.00, 28.00], [77.50, 26.50], [76.50, 24.50], [74.20, 24.00], [71.00, 24.50], [70.00, 26.50]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "IN-MP", "name": "Madhya Pradesh", "state_code": "MP", "type": "State" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[74.50, 22.50], [74.20, 24.00], [76.50, 24.50], [77.50, 26.50], [80.50, 25.50], [82.50, 24.50], [82.00, 22.50], [80.30, 21.20], [76.50, 21.50], [74.50, 22.50]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "IN-CT", "name": "Chhattisgarh", "state_code": "CT", "type": "State" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[80.30, 21.20], [82.00, 22.50], [83.50, 23.50], [84.00, 21.50], [82.50, 18.50], [80.80, 18.80], [80.30, 21.20]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "IN-OR", "name": "Odisha", "state_code": "OR", "type": "State" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[82.50, 18.50], [84.00, 21.50], [86.50, 22.50], [87.20, 21.50], [85.50, 19.50], [83.50, 18.50], [82.50, 18.50]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "IN-UP", "name": "Uttar Pradesh", "state_code": "UP", "type": "State" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[77.50, 28.50], [78.00, 30.00], [80.00, 29.50], [84.00, 27.50], [84.20, 25.50], [82.50, 24.50], [80.50, 25.50], [77.50, 26.50], [77.00, 28.00], [77.50, 28.50]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "IN-BR", "name": "Bihar", "state_code": "BR", "type": "State" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[84.00, 27.50], [85.50, 27.50], [88.00, 26.50], [87.50, 24.80], [84.20, 25.50], [84.00, 27.50]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "IN-JH", "name": "Jharkhand", "state_code": "JH", "type": "State" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[83.50, 23.50], [84.20, 25.50], [87.50, 24.80], [86.80, 22.50], [85.00, 22.00], [83.50, 23.50]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "IN-WB", "name": "West Bengal", "state_code": "WB", "type": "State" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[86.80, 22.50], [87.50, 24.80], [88.00, 26.50], [88.50, 27.20], [89.80, 26.50], [89.00, 24.00], [88.20, 21.60], [87.20, 21.50], [86.80, 22.50]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "IN-HR", "name": "Haryana", "state_code": "HR", "type": "State" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[75.00, 29.50], [77.00, 30.50], [77.40, 29.00], [77.00, 28.00], [76.00, 28.00], [75.00, 29.50]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "IN-PB", "name": "Punjab", "state_code": "PB", "type": "State" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[74.00, 30.20], [75.00, 32.20], [76.50, 32.00], [77.00, 30.50], [75.00, 29.50], [74.00, 30.20]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "IN-HP", "name": "Himachal Pradesh", "state_code": "HP", "type": "State" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[75.60, 32.20], [76.80, 33.20], [78.80, 32.50], [78.50, 31.00], [77.00, 30.50], [76.50, 32.00], [75.60, 32.20]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "IN-UT", "name": "Uttarakhand", "state_code": "UT", "type": "State" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[77.80, 30.50], [79.20, 31.40], [81.00, 30.20], [80.20, 29.00], [78.00, 30.00], [77.80, 30.50]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "IN-JK", "name": "Jammu and Kashmir", "state_code": "JK", "type": "UT" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[73.80, 33.00], [74.50, 35.00], [76.20, 34.50], [76.00, 32.50], [74.50, 32.50], [73.80, 33.00]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "IN-LA", "name": "Ladakh", "state_code": "LA", "type": "UT" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[76.20, 34.50], [77.50, 36.00], [79.50, 35.50], [79.00, 32.50], [77.50, 32.50], [76.20, 34.50]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "IN-DL", "name": "Delhi", "state_code": "DL", "type": "UT" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[76.85, 28.40], [77.35, 28.40], [77.35, 28.85], [76.85, 28.85], [76.85, 28.40]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "IN-CH", "name": "Chandigarh", "state_code": "CH", "type": "UT" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[76.70, 30.68], [76.84, 30.68], [76.84, 30.78], [76.70, 30.78], [76.70, 30.68]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "IN-SK", "name": "Sikkim", "state_code": "SK", "type": "State" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[88.05, 27.10], [88.20, 28.10], [88.90, 28.00], [88.85, 27.10], [88.05, 27.10]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "IN-AS", "name": "Assam", "state_code": "AS", "type": "State" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[89.80, 26.50], [92.00, 27.00], [94.50, 27.50], [95.80, 27.20], [93.50, 25.50], [91.50, 25.80], [89.80, 26.00], [89.80, 26.50]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "IN-AR", "name": "Arunachal Pradesh", "state_code": "AR", "type": "State" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[91.80, 27.50], [93.50, 28.80], [96.50, 28.50], [97.20, 27.80], [95.80, 27.20], [94.50, 27.50], [92.00, 27.00], [91.80, 27.50]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "IN-ML", "name": "Meghalaya", "state_code": "ML", "type": "State" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[90.00, 25.20], [92.50, 25.20], [92.50, 25.80], [90.00, 25.80], [90.00, 25.20]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "IN-NL", "name": "Nagaland", "state_code": "NL", "type": "State" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[93.50, 25.50], [94.50, 26.80], [95.20, 26.80], [94.50, 25.50], [93.50, 25.50]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "IN-MN", "name": "Manipur", "state_code": "MN", "type": "State" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[93.20, 24.00], [94.50, 24.20], [94.50, 25.50], [93.20, 25.50], [93.20, 24.00]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "IN-MZ", "name": "Mizoram", "state_code": "MZ", "type": "State" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[92.25, 21.90], [93.30, 22.20], [93.30, 24.20], [92.25, 24.20], [92.25, 21.90]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "IN-TR", "name": "Tripura", "state_code": "TR", "type": "State" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[91.20, 23.00], [92.25, 23.00], [92.25, 24.40], [91.20, 24.40], [91.20, 23.00]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "IN-DH", "name": "Dadra and Nagar Haveli and Daman and Diu", "state_code": "DH", "type": "UT" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[72.75, 20.30], [73.15, 20.30], [73.15, 20.55], [72.75, 20.55], [72.75, 20.30]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "IN-PY", "name": "Puducherry", "state_code": "PY", "type": "UT" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[79.75, 11.85], [79.88, 11.85], [79.88, 12.00], [79.75, 12.00], [79.75, 11.85]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "IN-LD", "name": "Lakshadweep", "state_code": "LD", "type": "UT" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[72.10, 10.00], [73.80, 10.00], [73.80, 11.50], [72.10, 11.50], [72.10, 10.00]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "IN-AN", "name": "Andaman and Nicobar Islands", "state_code": "AN", "type": "UT" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[92.20, 11.20], [93.10, 11.20], [93.10, 13.50], [92.20, 13.50], [92.20, 11.20]]]
       }
     }
   ]
