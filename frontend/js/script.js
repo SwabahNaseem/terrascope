@@ -62,12 +62,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   await checkBackendConnectivity();
 
   // 2. Initialize Leaflet Map with Worldwide capabilities
-  const map = initMap(
-    'map-view',
-    (stateName) => handleStateSelection(stateName),
-    () => handleNationalReset(),
-    (lat, lon) => handlePointSelection(lat, lon)
-  );
+  const map = initMap('map-view', {
+    onRegionSelect: (loc) => handleRegionSelection(loc),
+    onPointSelect: (lat, lon) => handlePointSelection(lat, lon),
+    onViewChange: (viewData) => handleViewChange(viewData),
+    onReset: () => handleNationalReset()
+  });
 
   // 3. Initialize Location Search & Autocomplete
   initSearch('location-search-input', 'search-results-dropdown', (selectedLocation) => {
@@ -182,7 +182,48 @@ async function loadNationalMapTrends() {
 }
 
 /**
- * Handles state selection from map click
+ * Handles region selection from map click (country, state, or district)
+ */
+function handleRegionSelection(loc) {
+  if (!loc) return;
+  const locObj = (typeof loc === 'string')
+    ? { type: 'state', name: loc, displayName: loc, code: getStateCode(loc) }
+    : loc;
+
+  AppState.selectedLocation = locObj;
+  AppState.isStateZoomed = true;
+
+  const stateStage = document.getElementById('state-analysis-stage');
+  if (stateStage) {
+    stateStage.classList.add('active');
+  }
+
+  executeAnalysis();
+}
+
+/**
+ * Handles spatial view change (e.g. World view, National view)
+ */
+function handleViewChange(viewData) {
+  if (!viewData) return;
+  AppState.selectedLocation = viewData.location || {
+    type: 'region',
+    name: viewData.view === 'world' ? 'Global Earth System' : 'India',
+    displayName: viewData.view === 'world' ? 'Global Earth System (Planetary Overview)' : 'India (National Overview)',
+    coordinates: viewData.view === 'world' ? [20.0, 10.0] : [22.5937, 78.9629]
+  };
+  AppState.isStateZoomed = viewData.view !== 'world' && viewData.view !== 'india';
+
+  const stateStage = document.getElementById('state-analysis-stage');
+  if (stateStage) {
+    stateStage.classList.add('active');
+  }
+
+  executeAnalysis();
+}
+
+/**
+ * Handles legacy state selection from controls
  */
 function handleStateSelection(stateName, zoomMap = true) {
   if (!stateName) return;
@@ -426,7 +467,7 @@ function renderAnalysisVisualizations(analysis) {
 }
 
 /**
- * Builds data structure for Markdown report export
+ * Builds data structure for PDF and Markdown report export
  */
 function buildExportPayload() {
   if (!AppState.currentAnalysis) return null;
@@ -436,6 +477,10 @@ function buildExportPayload() {
 
   return {
     locationName: analysis.locationName,
+    locationType: analysis.locationType || AppState.selectedLocation?.type || 'region',
+    coordinates: analysis.coordinates || AppState.selectedLocation?.coordinates,
+    country: analysis.country || AppState.selectedLocation?.country || 'India',
+    parent: analysis.parent || AppState.selectedLocation?.parent,
     variableName: primaryVar.name,
     unit: primaryVar.unit,
     startYear: analysis.startYear,
@@ -447,6 +492,10 @@ function buildExportPayload() {
     significant: primaryVar.stats.significant,
     classification: primaryVar.stats.classification,
     symbol: primaryVar.stats.symbol,
+    mean: primaryVar.stats.mean,
+    min: primaryVar.stats.min,
+    max: primaryVar.stats.max,
+    stdDev: primaryVar.stats.std_dev,
     summary: document.getElementById('summary-text')?.textContent
   };
 }
@@ -485,9 +534,13 @@ function formatApiResponseToAnalysis(json) {
   });
 
   return {
-    locationName: json.location?.name || 'Selected Location',
-    startYear: json.period?.start || 2000,
-    endYear: json.period?.end || 2024,
+    locationName: json.location?.name || AppState.selectedLocation?.displayName || AppState.selectedLocation?.name || 'Selected Location',
+    locationType: json.location?.type || AppState.selectedLocation?.type || 'region',
+    coordinates: json.location?.centroid || json.location?.coordinates || AppState.selectedLocation?.coordinates,
+    country: json.location?.country || AppState.selectedLocation?.country || 'India',
+    parent: json.location?.parent || AppState.selectedLocation?.parent,
+    startYear: parseInt(json.period?.start || 2000),
+    endYear: parseInt(json.period?.end || 2024),
     variables: variablesMap
   };
 }
@@ -736,6 +789,10 @@ function generateOfflineAnalysis(locationName, selectedVariables, startYear, end
 
   return {
     locationName: locationName,
+    locationType: AppState.selectedLocation?.type || 'region',
+    coordinates: coordinates || AppState.selectedLocation?.coordinates,
+    country: AppState.selectedLocation?.country || 'India',
+    parent: AppState.selectedLocation?.parent,
     startYear: startYear,
     endYear: endYear,
     aggregation: aggregation,

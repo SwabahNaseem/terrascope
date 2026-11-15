@@ -16,12 +16,15 @@ let currentSelectedDistrict = null;
 let currentSelectedCountry = null;
 let activeChoroplethData = {};
 let backButtonControl = null;
+let onRegionSelectCallback = null;
 let onStateClickCallback = null;
 let onResetCallback = null;
 let onPointClickCallback = null;
+let onViewChangeCallback = null;
 let activePointMarker = null;
 let choroplethVisible = true;
 let currentBasemapKey = 'satellite';
+let boundaryLoadSeq = 0;
 
 // Administrative Boundary State
 let currentIso3 = 'IND';
@@ -136,15 +139,25 @@ const COUNTRY_CENTROIDS = {
 /**
  * Initialize Leaflet Map with photorealistic satellite imagery and worldwide capabilities
  */
-export function initMap(containerId, onStateClick, onReset, onPointClick) {
+export function initMap(containerId, optionsOrRegionCb, onReset, onPointClick, onViewChange) {
   if (typeof L === 'undefined') {
     console.warn('[TerraScope] Leaflet library not loaded.');
     return null;
   }
 
-  onStateClickCallback = onStateClick;
-  onResetCallback = onReset;
-  onPointClickCallback = onPointClick;
+  if (typeof optionsOrRegionCb === 'object' && optionsOrRegionCb !== null) {
+    onRegionSelectCallback = optionsOrRegionCb.onRegionSelect || optionsOrRegionCb.onStateClick;
+    onResetCallback = optionsOrRegionCb.onReset;
+    onPointClickCallback = optionsOrRegionCb.onPointSelect || optionsOrRegionCb.onPointClick;
+    onViewChangeCallback = optionsOrRegionCb.onViewChange;
+    onStateClickCallback = onRegionSelectCallback;
+  } else {
+    onRegionSelectCallback = optionsOrRegionCb;
+    onStateClickCallback = optionsOrRegionCb;
+    onResetCallback = onReset;
+    onPointClickCallback = onPointClick;
+    onViewChangeCallback = onViewChange;
+  }
 
   // Initialize Map with worldwide zoom range (2 to 18)
   mapInstance = L.map(containerId, {
@@ -296,6 +309,7 @@ export function getFeatureCode(properties) {
  * @param {string} [parentFilter] - Optional state/province filter for ADM2 districts (e.g. 'Kerala')
  */
 export async function loadGeoBoundaries(iso3 = 'IND', admLevel = 'ADM1', parentFilter = null) {
+  const seq = ++boundaryLoadSeq;
   currentIso3 = (iso3 || 'IND').toUpperCase();
   currentAdmLevel = (admLevel || 'ADM1').toUpperCase();
   currentParentFilter = parentFilter;
@@ -304,7 +318,9 @@ export async function loadGeoBoundaries(iso3 = 'IND', admLevel = 'ADM1', parentF
 
   // 1. Check in-memory browser cache
   if (boundaryCache.has(cacheKey)) {
-    renderGeoBoundaries(boundaryCache.get(cacheKey));
+    if (seq === boundaryLoadSeq) {
+      renderGeoBoundaries(boundaryCache.get(cacheKey));
+    }
     return;
   }
 
@@ -320,13 +336,17 @@ export async function loadGeoBoundaries(iso3 = 'IND', admLevel = 'ADM1', parentF
       const data = await res.json();
       if (data && data.features && data.features.length > 0) {
         boundaryCache.set(cacheKey, data);
-        renderGeoBoundaries(data);
+        if (seq === boundaryLoadSeq) {
+          renderGeoBoundaries(data);
+        }
         return;
       }
     }
   } catch (err) {
     console.warn('[TerraScope Map] Backend boundaries endpoint query notice:', err.message);
   }
+
+  if (seq !== boundaryLoadSeq) return;
 
   // 3. Fallbacks for offline / sample mode
   // 3a. World countries fallback
@@ -336,11 +356,15 @@ export async function loadGeoBoundaries(iso3 = 'IND', admLevel = 'ADM1', parentF
       if (wRes.ok) {
         const wData = await wRes.json();
         boundaryCache.set(cacheKey, wData);
-        renderGeoBoundaries(wData);
+        if (seq === boundaryLoadSeq) {
+          renderGeoBoundaries(wData);
+        }
         return;
       }
     } catch {}
   }
+
+  if (seq !== boundaryLoadSeq) return;
 
   // 3b. Kerala districts fallback
   if (currentIso3 === 'IND' && currentAdmLevel === 'ADM2' && currentParentFilter && currentParentFilter.toLowerCase() === 'kerala') {
@@ -349,11 +373,15 @@ export async function loadGeoBoundaries(iso3 = 'IND', admLevel = 'ADM1', parentF
       if (kRes.ok) {
         const kData = await kRes.json();
         boundaryCache.set(cacheKey, kData);
-        renderGeoBoundaries(kData);
+        if (seq === boundaryLoadSeq) {
+          renderGeoBoundaries(kData);
+        }
         return;
       }
     } catch {}
   }
+
+  if (seq !== boundaryLoadSeq) return;
 
   // 3c. India states fallback
   if (currentIso3 === 'IND' && currentAdmLevel === 'ADM1') {
@@ -362,7 +390,9 @@ export async function loadGeoBoundaries(iso3 = 'IND', admLevel = 'ADM1', parentF
       if (fbRes.ok) {
         const fbData = await fbRes.json();
         boundaryCache.set(cacheKey, fbData);
-        renderGeoBoundaries(fbData);
+        if (seq === boundaryLoadSeq) {
+          renderGeoBoundaries(fbData);
+        }
         return;
       }
     } catch {}
@@ -422,33 +452,149 @@ function renderGeoBoundaries(data) {
  * Handles click on an administrative boundary polygon
  */
 function handleRegionClick(regionName, feature, layer) {
+  const props = feature?.properties || {};
+  const code = getFeatureCode(props) || props['ISO3166-1-Alpha-3'] || '';
+
   if (currentAdmLevel === 'ADM0') {
-    // Clicking a country on world view drills into that country's state boundaries
-    const props = feature.properties || {};
-    const code = getFeatureCode(props) || props['ISO3166-1-Alpha-3'] || 'IND';
-    zoomToCountry(regionName, code);
-    if (onStateClickCallback) onStateClickCallback(regionName);
-  } else if (currentAdmLevel === 'ADM1') {
-    // Clicking a state selects and isolates it AND automatically loads that state's districts (ADM2)!
-    selectAndIsolateState(regionName, layer);
-    loadGeoBoundaries(currentIso3, 'ADM2', regionName);
-    updateBackControlText(`← Back to All States (ADM1)`);
-    showBackControl(true);
-    if (onStateClickCallback) onStateClickCallback(regionName);
-  } else {
-    // ADM2: District selection
-    currentSelectedDistrict = regionName;
-    clearPointMarker();
-    if (layer && layer.getBounds) {
+    // 1. ADM0 (World View): Clicking a country drills into that country
+    currentIso3 = (code || 'IND').toUpperCase();
+    currentSelectedCountry = regionName;
+    currentSelectedState = null;
+    currentSelectedDistrict = null;
+    currentParentFilter = null;
+
+    let targetCenter = COUNTRY_CENTROIDS[currentIso3] || COUNTRY_CENTROIDS[regionName];
+    if (!targetCenter && layer && layer.getBounds) {
       try {
-        mapInstance.fitBounds(layer.getBounds(), { padding: [30, 30], maxZoom: 12 });
+        const b = layer.getBounds();
+        targetCenter = [b.getCenter().lat, b.getCenter().lng];
       } catch {}
     }
+    if (!targetCenter) targetCenter = [20.0, 10.0];
+
+    if (layer && layer.getBounds) {
+      try {
+        mapInstance.fitBounds(layer.getBounds(), { padding: [40, 40], maxZoom: 6, animate: true, duration: 1.0 });
+      } catch {
+        mapInstance.flyTo(targetCenter, 5, { animate: true, duration: 1.0 });
+      }
+    } else {
+      mapInstance.flyTo(targetCenter, 5, { animate: true, duration: 1.0 });
+    }
+
+    showBackControl(true);
+    updateBackControlText('← Back to World (ADM0)');
+
+    if (currentIso3 === 'IND') {
+      currentAdmLevel = 'ADM1';
+      loadGeoBoundaries('IND', 'ADM1');
+    } else {
+      currentAdmLevel = 'ADM1';
+      loadGeoBoundaries(currentIso3, 'ADM1').catch(() => {
+        currentAdmLevel = 'ADM0';
+        loadGeoBoundaries(currentIso3, 'ADM0');
+      });
+    }
+
+    updateToolbarActiveLevel(currentAdmLevel);
+
+    const locationPayload = {
+      type: 'country',
+      name: regionName,
+      displayName: regionName,
+      code: code || currentIso3,
+      country: regionName,
+      coordinates: targetCenter
+    };
+
+    if (onRegionSelectCallback) onRegionSelectCallback(locationPayload);
+    else if (onStateClickCallback) onStateClickCallback(locationPayload);
+
+  } else if (currentAdmLevel === 'ADM1') {
+    // 2. ADM1 (States/Provinces): Clicking a state selects and isolates it
+    currentSelectedState = regionName;
+    currentSelectedDistrict = null;
+
+    selectAndIsolateState(regionName, layer);
+
+    let targetCenter = STATE_CENTROIDS[regionName];
+    if (!targetCenter && layer && layer.getBounds) {
+      try {
+        const b = layer.getBounds();
+        targetCenter = [b.getCenter().lat, b.getCenter().lng];
+      } catch {}
+    }
+    if (!targetCenter) targetCenter = (regionName.toLowerCase() === 'kerala') ? KERALA_CENTER : [22.5, 78.9];
+
+    if (currentIso3 === 'IND' && regionName.toLowerCase() === 'kerala') {
+      currentAdmLevel = 'ADM2';
+      currentParentFilter = regionName;
+      loadGeoBoundaries('IND', 'ADM2', regionName);
+      updateBackControlText('← Back to All States (ADM1)');
+      showBackControl(true);
+    } else if (currentIso3 === 'IND') {
+      loadGeoBoundaries('IND', 'ADM2', regionName).then(() => {
+        currentAdmLevel = 'ADM2';
+        currentParentFilter = regionName;
+        updateBackControlText('← Back to All States (ADM1)');
+        showBackControl(true);
+      }).catch(() => {
+        updateBackControlText('← Back to All States (ADM1)');
+        showBackControl(true);
+      });
+    } else {
+      updateBackControlText(`← Back to ${currentSelectedCountry || 'Country'} (ADM0)`);
+      showBackControl(true);
+    }
+
+    updateToolbarActiveLevel(currentAdmLevel);
+
+    const locationPayload = {
+      type: 'state',
+      name: regionName,
+      displayName: `${regionName}, ${currentSelectedCountry || 'India'}`,
+      code: code,
+      country: currentSelectedCountry || 'India',
+      coordinates: targetCenter
+    };
+
+    if (onRegionSelectCallback) onRegionSelectCallback(locationPayload);
+    else if (onStateClickCallback) onStateClickCallback(locationPayload);
+
+  } else {
+    // 3. ADM2 (Districts): Clicking a district isolates it
+    currentSelectedDistrict = regionName;
+    clearPointMarker();
+
+    let targetCenter = null;
+    if (layer && layer.getBounds) {
+      try {
+        const b = layer.getBounds();
+        targetCenter = [b.getCenter().lat, b.getCenter().lng];
+        mapInstance.fitBounds(b, { padding: [35, 35], maxZoom: 12, animate: true, duration: 0.8 });
+      } catch {}
+    }
+    if (!targetCenter) targetCenter = KERALA_CENTER;
+
     if (geojsonLayer) {
       geojsonLayer.eachLayer(l => l.setStyle(getStateFeatureStyle(l.feature)));
     }
-    const fullLabel = `${regionName}, ${currentParentFilter || 'Kerala'}`;
-    if (onStateClickCallback) onStateClickCallback(fullLabel);
+
+    const parentState = currentParentFilter || 'Kerala';
+    updateBackControlText(`← Back to ${parentState} Districts`);
+    showBackControl(true);
+
+    const locationPayload = {
+      type: 'district',
+      name: regionName,
+      displayName: `${regionName}, ${parentState}`,
+      parent: parentState,
+      country: currentSelectedCountry || 'India',
+      coordinates: targetCenter
+    };
+
+    if (onRegionSelectCallback) onRegionSelectCallback(locationPayload);
+    else if (onStateClickCallback) onStateClickCallback(locationPayload);
   }
 }
 
@@ -460,19 +606,22 @@ export function zoomToCountry(countryName, iso3 = 'IND') {
   currentSelectedCountry = countryName;
   currentSelectedState = null;
   currentSelectedDistrict = null;
-  currentAdmLevel = 'ADM1';
+  currentAdmLevel = (currentIso3 === 'WORLD' || currentIso3 === 'ALL') ? 'ADM0' : 'ADM1';
   currentParentFilter = null;
 
   showBackControl(true);
   updateBackControlText('← Back to World (ADM0)');
 
-  // Try loading country's ADM1; if unavailable, loads country's ADM0
-  loadGeoBoundaries(currentIso3, 'ADM1').catch(() => {
-    loadGeoBoundaries(currentIso3, 'ADM0');
-  });
-
   const coords = COUNTRY_CENTROIDS[currentIso3] || COUNTRY_CENTROIDS[countryName] || [20.0, 10.0];
   mapInstance.flyTo(coords, 5, { animate: true, duration: 1.0 });
+
+  if (currentIso3 === 'IND') {
+    loadGeoBoundaries('IND', 'ADM1');
+  } else {
+    loadGeoBoundaries(currentIso3, 'ADM1').catch(() => {
+      loadGeoBoundaries(currentIso3, 'ADM0');
+    });
+  }
 
   const btnWorld = document.querySelector('#btn-view-world');
   const btnIndia = document.querySelector('#btn-view-india');
@@ -495,19 +644,21 @@ export function zoomToState(stateName, drillToDistricts = true) {
 
   currentSelectedState = stateName;
   currentSelectedDistrict = null;
+  currentIso3 = 'IND';
+  currentAdmLevel = 'ADM1';
   showBackControl(true);
-  updateBackControlText('← Back to All States');
+  updateBackControlText('← Back to All States (ADM1)');
 
-  if (drillToDistricts) {
-    // Automatically load that state's districts (e.g. Kerala's 14 districts)
-    loadGeoBoundaries('IND', 'ADM2', stateName).then(() => {
-      const coords = (stateName.toLowerCase() === 'kerala') ? KERALA_CENTER : (STATE_CENTROIDS[stateName] || [10.5, 76.5]);
-      const zoomLvl = (stateName.toLowerCase() === 'kerala') ? DEFAULT_KERALA_ZOOM : 7.5;
-      mapInstance.flyTo(coords, zoomLvl, { animate: true, duration: 0.9 });
+  if (drillToDistricts && stateName.toLowerCase() === 'kerala') {
+    currentAdmLevel = 'ADM2';
+    currentParentFilter = 'Kerala';
+    loadGeoBoundaries('IND', 'ADM2', 'Kerala').then(() => {
+      mapInstance.flyTo(KERALA_CENTER, DEFAULT_KERALA_ZOOM, { animate: true, duration: 0.9 });
     });
   } else {
-    const coords = STATE_CENTROIDS[stateName] || [10.5, 76.5];
+    const coords = STATE_CENTROIDS[stateName] || INDIA_CENTER;
     mapInstance.flyTo(coords, 7, { animate: true, duration: 0.8 });
+    loadGeoBoundaries('IND', 'ADM1');
   }
 }
 
@@ -999,14 +1150,52 @@ function showBackControl(show) {
 }
 
 function handleBackNavigation() {
+  boundaryLoadSeq++;
   if (currentAdmLevel === 'ADM2') {
     // Step back from ADM2 (Districts) to ADM1 (States)
     currentAdmLevel = 'ADM1';
     currentSelectedDistrict = null;
+    const parentState = currentParentFilter;
     currentParentFilter = null;
     loadGeoBoundaries(currentIso3 === 'WORLD' ? 'IND' : currentIso3, 'ADM1');
-    mapInstance.flyTo(INDIA_CENTER, DEFAULT_INDIA_ZOOM, { animate: true, duration: 0.8 });
-    showBackControl(false);
+
+    if (currentIso3 === 'IND') {
+      mapInstance.flyTo(INDIA_CENTER, DEFAULT_INDIA_ZOOM, { animate: true, duration: 0.8 });
+      showBackControl(false);
+      updateToolbarActiveLevel('ADM1');
+      if (onViewChangeCallback) {
+        onViewChangeCallback({
+          view: 'india',
+          location: {
+            type: 'country',
+            name: 'India',
+            displayName: 'India (National Overview)',
+            code: 'IND',
+            country: 'India',
+            coordinates: INDIA_CENTER
+          }
+        });
+      }
+    } else {
+      const coords = COUNTRY_CENTROIDS[currentIso3] || WORLD_CENTER;
+      mapInstance.flyTo(coords, 5, { animate: true, duration: 0.8 });
+      updateBackControlText('← Back to World (ADM0)');
+      showBackControl(true);
+      updateToolbarActiveLevel('ADM1');
+      if (onViewChangeCallback) {
+        onViewChangeCallback({
+          view: 'country',
+          location: {
+            type: 'country',
+            name: currentSelectedCountry || currentIso3,
+            displayName: currentSelectedCountry || currentIso3,
+            code: currentIso3,
+            country: currentSelectedCountry || currentIso3,
+            coordinates: coords
+          }
+        });
+      }
+    }
   } else if (currentIso3 !== 'IND' && currentIso3 !== 'WORLD') {
     // Step back from foreign country to World view
     resetToWorldView();
@@ -1068,9 +1257,10 @@ export function zoomToCoordinates(lat, lon, zoomLevel = 8, label = 'Target Locat
  * Resets map to default national India view
  */
 export function resetToNationalView() {
+  boundaryLoadSeq++;
   currentSelectedState = null;
   currentSelectedDistrict = null;
-  currentSelectedCountry = null;
+  currentSelectedCountry = 'India';
   currentIso3 = 'IND';
   currentAdmLevel = 'ADM1';
   currentParentFilter = null;
@@ -1092,6 +1282,22 @@ export function resetToNationalView() {
     btnWorld.classList.remove('active-view');
   }
 
+  updateToolbarActiveLevel('ADM1');
+
+  if (onViewChangeCallback) {
+    onViewChangeCallback({
+      view: 'india',
+      location: {
+        type: 'country',
+        name: 'India',
+        displayName: 'India (National Overview)',
+        code: 'IND',
+        country: 'India',
+        coordinates: INDIA_CENTER
+      }
+    });
+  }
+
   if (onResetCallback) {
     onResetCallback();
   }
@@ -1101,12 +1307,14 @@ export function resetToNationalView() {
  * Resets map to worldwide view (zoom level 2) with all countries rendered as interactive polygons
  */
 export function resetToWorldView() {
+  boundaryLoadSeq++;
   currentSelectedState = null;
   currentSelectedDistrict = null;
   currentSelectedCountry = null;
   currentIso3 = 'WORLD';
   currentAdmLevel = 'ADM0';
   currentParentFilter = null;
+  clearPointMarker();
 
   showBackControl(false);
 
@@ -1123,6 +1331,20 @@ export function resetToWorldView() {
   if (btnWorld && btnIndia) {
     btnWorld.classList.add('active-view');
     btnIndia.classList.remove('active-view');
+  }
+
+  updateToolbarActiveLevel('ADM0');
+
+  if (onViewChangeCallback) {
+    onViewChangeCallback({
+      view: 'world',
+      location: {
+        type: 'world',
+        name: 'Global Earth System',
+        displayName: 'Global Earth System (Planetary Overview)',
+        coordinates: WORLD_CENTER
+      }
+    });
   }
 }
 
