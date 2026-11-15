@@ -21,6 +21,7 @@ import { initControls, getSelectedOptions, setControlsLoading } from './controls
 import { renderMultiVariableCharts, destroyAllCharts } from './charts.js';
 import { initLegend, updateLegend } from './legend.js';
 import { renderSummaryCard, renderSignificanceDrawer, initReportExport } from './report.js';
+import { API_CONFIG } from './config.js';
 
 /**
  * Single-Source-of-Truth Application State Store
@@ -113,12 +114,48 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 6. Initialize Report Export Download
   initReportExport(() => buildExportPayload());
 
-  // 7. Load National Choropleth Map Trends
+  // 7. Initialize About Modal Handlers
+  initAboutModal();
+
+  // 8. Load National Choropleth Map Trends
   await loadNationalMapTrends();
 
-  // 8. Pre-load Kerala baseline analysis
+  // 9. Pre-load Kerala baseline analysis
   handleStateSelection('Kerala', false);
 });
+
+function initAboutModal() {
+  const aboutBtn = document.getElementById('nav-about-btn');
+  const aboutModal = document.getElementById('about-modal');
+  const modalCloseBtn = document.getElementById('modal-close-btn');
+
+  if (aboutBtn && aboutModal) {
+    aboutBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      aboutModal.classList.add('active');
+    });
+  }
+
+  if (modalCloseBtn && aboutModal) {
+    modalCloseBtn.addEventListener('click', () => {
+      aboutModal.classList.remove('active');
+    });
+  }
+
+  if (aboutModal) {
+    aboutModal.addEventListener('click', (e) => {
+      if (e.target === aboutModal) {
+        aboutModal.classList.remove('active');
+      }
+    });
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && aboutModal && aboutModal.classList.contains('active')) {
+      aboutModal.classList.remove('active');
+    }
+  });
+}
 
 /**
  * Checks if Flask backend REST API is responsive; sets offline mode if not
@@ -126,8 +163,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function checkBackendConnectivity() {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 800);
-    const res = await fetch('/api/variables', { signal: controller.signal });
+    const timeoutId = setTimeout(() => controller.abort(), 1200);
+    const res = await fetch(API_CONFIG.url('variables'), { signal: controller.signal });
     clearTimeout(timeoutId);
 
     if (res.ok) {
@@ -163,7 +200,12 @@ async function loadNationalMapTrends() {
     try {
       const startYr = AppState.timeWindow?.startYear || 2000;
       const endYr = AppState.timeWindow?.endYear || 2024;
-      const res = await fetch(`/api/map-trends?variable=${AppState.selectedVariables[0] || 'temperature'}&start_date=${startYr}&end_date=${endYr}`);
+      const mapTrendsUrl = API_CONFIG.url('mapTrends', {
+        variable: AppState.selectedVariables[0] || 'temperature',
+        start_date: startYr,
+        end_date: endYr
+      });
+      const res = await fetch(mapTrendsUrl);
       if (res.ok) {
         const json = await res.json();
         trends = json.trends || json.states;
@@ -259,10 +301,8 @@ async function handlePointSelection(lat, lon) {
   // 1. Attempt live API reverse geocoding
   if (AppState.apiConnected) {
     try {
-      let res = await fetch(`/api/reverse?lat=${normLat}&lon=${normLon}`);
-      if (!res.ok) {
-        res = await fetch(`/api/location/reverse?lat=${normLat}&lon=${normLon}`);
-      }
+      const reverseUrl = API_CONFIG.url('reverse', { lat: normLat, lon: normLon });
+      let res = await fetch(reverseUrl);
       if (res.ok) {
         const data = await res.json();
         if (data.location && (data.location.name || data.location.display_name)) {
@@ -373,7 +413,8 @@ async function executeAnalysis() {
         aggregation: AppState.aggregation
       };
 
-      const res = await fetch('/api/analysis', {
+      const analysisUrl = API_CONFIG.url('analysis');
+      const res = await fetch(analysisUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

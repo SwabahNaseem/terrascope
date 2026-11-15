@@ -4,6 +4,8 @@
  * and keyboard navigation for any city, state, or country worldwide.
  */
 
+import { API_CONFIG } from './config.js';
+
 const PRESET_GLOBAL_LOCATIONS = [
   // 28 Indian States
   { name: "Andhra Pradesh", type: "state", code: "IN-AP", country: "India", coordinates: [15.9129, 79.7400] },
@@ -219,7 +221,8 @@ async function performSearch(query, inputEl, dropdownEl, onSelect) {
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 1200);
-    const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`, {
+    const searchUrl = API_CONFIG.url('search', { q: query });
+    const res = await fetch(searchUrl, {
       signal: controller.signal
     });
     clearTimeout(timeoutId);
@@ -254,7 +257,8 @@ async function performSearch(query, inputEl, dropdownEl, onSelect) {
  */
 async function resolveAndSelectQuery(query, inputEl, dropdownEl, onSelect) {
   try {
-    const res = await fetch(`/api/geocode?q=${encodeURIComponent(query)}`);
+    const geocodeUrl = API_CONFIG.url('geocode', { q: query });
+    const res = await fetch(geocodeUrl);
     if (res.ok) {
       const data = await res.json();
       if (data.coordinates) {

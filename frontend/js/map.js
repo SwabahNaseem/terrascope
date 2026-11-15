@@ -8,6 +8,8 @@
  * and multi-level navigation.
  */
 
+import { API_CONFIG } from './config.js';
+
 let mapInstance = null;
 let geojsonLayer = null;
 let stateLayersMap = new Map(); // Name/code (lowercase) -> Leaflet Layer
@@ -326,11 +328,11 @@ export async function loadGeoBoundaries(iso3 = 'IND', admLevel = 'ADM1', parentF
 
   // 2. Fetch from Flask backend endpoint (/api/boundaries)
   try {
-    let url = `/api/boundaries?iso3=${currentIso3}&adm=${currentAdmLevel}`;
+    const queryParams = { iso3: currentIso3, adm: currentAdmLevel };
     if (currentParentFilter) {
-      url += `&parent=${encodeURIComponent(currentParentFilter)}`;
+      queryParams.parent = currentParentFilter;
     }
-
+    const url = API_CONFIG.url('boundaries', queryParams);
     const res = await fetch(url);
     if (res.ok) {
       const data = await res.json();
@@ -463,38 +465,35 @@ function handleRegionClick(regionName, feature, layer) {
     currentSelectedDistrict = null;
     currentParentFilter = null;
 
-    let targetCenter = COUNTRY_CENTROIDS[currentIso3] || COUNTRY_CENTROIDS[regionName];
-    if (!targetCenter && layer && layer.getBounds) {
+    // Compute dynamic center purely from layer geometry bounds (zero manual hardcoded coordinates)
+    let targetCenter = null;
+    if (layer && layer.getBounds) {
       try {
         const b = layer.getBounds();
-        targetCenter = [b.getCenter().lat, b.getCenter().lng];
+        const c = b.getCenter();
+        targetCenter = [Number(c.lat.toFixed(4)), Number(c.lng.toFixed(4))];
       } catch {}
     }
-    if (!targetCenter) targetCenter = [20.0, 10.0];
 
     if (layer && layer.getBounds) {
       try {
         mapInstance.fitBounds(layer.getBounds(), { padding: [40, 40], maxZoom: 6, animate: true, duration: 1.0 });
       } catch {
-        mapInstance.flyTo(targetCenter, 5, { animate: true, duration: 1.0 });
+        if (targetCenter) mapInstance.flyTo(targetCenter, 5, { animate: true, duration: 1.0 });
       }
-    } else {
+    } else if (targetCenter) {
       mapInstance.flyTo(targetCenter, 5, { animate: true, duration: 1.0 });
     }
 
     showBackControl(true);
     updateBackControlText('← Back to World (ADM0)');
 
-    if (currentIso3 === 'IND') {
-      currentAdmLevel = 'ADM1';
-      loadGeoBoundaries('IND', 'ADM1');
-    } else {
-      currentAdmLevel = 'ADM1';
-      loadGeoBoundaries(currentIso3, 'ADM1').catch(() => {
-        currentAdmLevel = 'ADM0';
-        loadGeoBoundaries(currentIso3, 'ADM0');
-      });
-    }
+    // Dynamically load ADM1 (States/Provinces) for clicked country
+    currentAdmLevel = 'ADM1';
+    loadGeoBoundaries(currentIso3, 'ADM1').catch(() => {
+      currentAdmLevel = 'ADM0';
+      loadGeoBoundaries('WORLD', 'ADM0');
+    });
 
     updateToolbarActiveLevel(currentAdmLevel);
 
@@ -517,35 +516,27 @@ function handleRegionClick(regionName, feature, layer) {
 
     selectAndIsolateState(regionName, layer);
 
-    let targetCenter = STATE_CENTROIDS[regionName];
-    if (!targetCenter && layer && layer.getBounds) {
+    // Compute dynamic center purely from polygon geometry bounds
+    let targetCenter = null;
+    if (layer && layer.getBounds) {
       try {
         const b = layer.getBounds();
-        targetCenter = [b.getCenter().lat, b.getCenter().lng];
+        const c = b.getCenter();
+        targetCenter = [Number(c.lat.toFixed(4)), Number(c.lng.toFixed(4))];
       } catch {}
     }
-    if (!targetCenter) targetCenter = (regionName.toLowerCase() === 'kerala') ? KERALA_CENTER : [22.5, 78.9];
 
-    if (currentIso3 === 'IND' && regionName.toLowerCase() === 'kerala') {
+    // Drill down to ADM2 (Districts/Counties) globally for any country
+    currentParentFilter = regionName;
+    loadGeoBoundaries(currentIso3, 'ADM2', regionName).then(() => {
       currentAdmLevel = 'ADM2';
-      currentParentFilter = regionName;
-      loadGeoBoundaries('IND', 'ADM2', regionName);
-      updateBackControlText('← Back to All States (ADM1)');
+      updateBackControlText(`← Back to ${currentSelectedCountry || 'Country'} States (ADM1)`);
       showBackControl(true);
-    } else if (currentIso3 === 'IND') {
-      loadGeoBoundaries('IND', 'ADM2', regionName).then(() => {
-        currentAdmLevel = 'ADM2';
-        currentParentFilter = regionName;
-        updateBackControlText('← Back to All States (ADM1)');
-        showBackControl(true);
-      }).catch(() => {
-        updateBackControlText('← Back to All States (ADM1)');
-        showBackControl(true);
-      });
-    } else {
+    }).catch(() => {
+      // If ADM2 not available for this state/country, stay on ADM1 with state isolated
       updateBackControlText(`← Back to ${currentSelectedCountry || 'Country'} (ADM0)`);
       showBackControl(true);
-    }
+    });
 
     updateToolbarActiveLevel(currentAdmLevel);
 
@@ -948,8 +939,9 @@ function updateToolbarActiveLevel(level) {
 }
 
 /**
- * Determines polygon style over satellite photography:
- * Uses semi-transparent luminous fills with crisp bright borders for photorealistic harmony.
+ * Determines boundary outline style:
+ * Consistent crisp vector outline aesthetic for Countries (ADM0), States (ADM1), and Districts (ADM2).
+ * Fills remain transparent to let satellite terrain shine through cleanly.
  */
 function getStateFeatureStyle(feature) {
   const props = feature?.properties || {};
@@ -957,67 +949,70 @@ function getStateFeatureStyle(feature) {
   const regionCode = getFeatureCode(props);
 
   const classification = getTrendClassification(regionName, regionCode);
-  const baseColor = TREND_COLORS[classification] || TREND_COLORS.no_clear_change;
+  const trendColor = TREND_COLORS[classification] || TREND_COLORS.no_clear_change;
 
-  if (!choroplethVisible) {
-    return {
-      fillColor: 'transparent',
-      fillOpacity: 0.0,
-      weight: 1.2,
-      opacity: 0.85,
-      color: 'rgba(255, 255, 255, 0.7)'
-    };
-  }
-
-  // Selected district highlight
+  // Selected district highlight (ADM2)
   if (currentSelectedDistrict && isRegionMatch(regionName, currentSelectedDistrict)) {
     return {
-      fillColor: baseColor,
-      weight: 3.5,
+      fillColor: 'rgba(255, 223, 121, 0.15)',
+      fillOpacity: 0.15,
+      weight: 3.2,
       opacity: 1.0,
-      color: '#FFDF79', // Luminous gold border
-      fillOpacity: 0.82
+      color: '#FFDF79' // Luminous gold outline
     };
   }
 
   // Selected state highlight in ADM1
   if (currentSelectedState && currentAdmLevel === 'ADM1' && isRegionMatch(regionName, currentSelectedState)) {
     return {
-      fillColor: baseColor,
-      weight: 3.5,
+      fillColor: 'rgba(255, 223, 121, 0.15)',
+      fillOpacity: 0.15,
+      weight: 3.2,
       opacity: 1.0,
-      color: '#FFDF79',
-      fillOpacity: 0.75
+      color: '#FFDF79'
     };
   }
 
-  // Districts (ADM2): Crisp distinct separation with high contrast borders
-  if (currentAdmLevel === 'ADM2') {
+  // Selected country highlight in ADM0
+  if (currentSelectedCountry && currentAdmLevel === 'ADM0' && isRegionMatch(regionName, currentSelectedCountry)) {
     return {
-      fillColor: baseColor,
-      weight: 1.8,
+      fillColor: 'rgba(255, 223, 121, 0.15)',
+      fillOpacity: 0.15,
+      weight: 3.2,
       opacity: 1.0,
-      color: '#FFFFFF',
-      fillOpacity: 0.60
+      color: '#FFDF79'
     };
   }
 
-  // Normal national/global choropleth
+  // Base outline color: subtle tint of trend color if choropleth is enabled, otherwise clean crisp off-white
+  const outlineColor = choroplethVisible ? trendColor : 'rgba(255, 255, 255, 0.85)';
+
+  // Uniform clean outline style across all tiers: Countries, States, and Districts
+  let borderWeight = 1.5;
+  if (currentAdmLevel === 'ADM0') {
+    borderWeight = 1.8;
+  } else if (currentAdmLevel === 'ADM1') {
+    borderWeight = 1.5;
+  } else if (currentAdmLevel === 'ADM2') {
+    borderWeight = 1.3;
+  }
+
   return {
-    fillColor: baseColor,
-    weight: currentAdmLevel === 'ADM0' ? 1.0 : 1.5,
-    opacity: 0.9,
-    color: '#FFFFFF',
-    fillOpacity: 0.52
+    fillColor: choroplethVisible ? trendColor : 'transparent',
+    fillOpacity: choroplethVisible ? 0.08 : 0.02, // ultra-subtle tint for click capturing
+    weight: borderWeight,
+    opacity: 0.95,
+    color: outlineColor
   };
 }
 
 function highlightFeature(e, feature) {
   const layer = e.target;
   layer.setStyle({
-    weight: 3.0,
-    color: '#FFDF79',
-    fillOpacity: choroplethVisible ? 0.78 : 0.25
+    weight: 2.8,
+    color: '#FFDF79', // Luminous gold outline on hover
+    fillColor: 'rgba(255, 223, 121, 0.15)',
+    fillOpacity: 0.15
   });
 
   if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {

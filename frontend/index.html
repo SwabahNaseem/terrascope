@@ -163,8 +163,33 @@
 
   <!-- Application Footer -->
   <footer role="contentinfo">
-    <p>TerraScope Global &amp; India Edition &bull; NASA Space Apps / Global Challenge &bull; Built with NASA POWER &amp; GPM IMERG Data &bull; Boundaries &copy; <a href="https://www.geoboundaries.org/" target="_blank" rel="noopener" style="color: inherit; text-decoration: underline;">geoBoundaries</a> (CC-BY 4.0 / ODbL)</p>
+    <p>TerraScope Global &bull; NASA Space Apps / Global Challenge &bull; Built with NASA POWER &amp; GPM IMERG Data &bull; Boundaries &copy; <a href="https://www.geoboundaries.org/" target="_blank" rel="noopener" style="color: inherit; text-decoration: underline;">geoBoundaries</a> (CC-BY 4.0 / ODbL)</p>
   </footer>
+
+  <!-- About Modal Dialog -->
+  <div id="about-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="about-modal-title">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="about-modal-title">About TerraScope</h2>
+        <button type="button" class="modal-close-btn" id="modal-close-btn" aria-label="Close dialog">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p><strong>TerraScope</strong> is an open-source global Earth observation analytics dashboard engineered for the NASA Space Apps / Global Challenge. It detects, evaluates, and communicates secular climate trends across countries, states, districts, and arbitrary point coordinates worldwide.</p>
+        
+        <h4 style="margin-top: 14px; color: var(--primary);">Authoritative Earth Observation Sources</h4>
+        <ul style="margin-left: 20px; margin-top: 6px; font-size: 0.9rem; line-height: 1.6;">
+          <li><strong>NASA POWER Project</strong>: Meteorological records for near-surface air temperature (<code>T2M</code>), precipitation (<code>PRECTOTCORR</code>), and soil wetness (<code>GWETTOP</code>, <code>GWETROOT</code>) on a 0.5° grid (1981–present).</li>
+          <li><strong>GPM IMERG</strong>: Global Precipitation Measurement satellite precipitation records.</li>
+          <li><strong>SWOT Mission Proxy</strong>: Surface water extent and reservoir elevation indicators.</li>
+          <li><strong>geoBoundaries Open Database</strong>: Global administrative boundaries across Country (ADM0), State/Province (ADM1), and District/County (ADM2) tiers (Runfola et al., CC-BY 4.0 / ODbL).</li>
+          <li><strong>Maps.co &amp; Nominatim</strong>: Dynamic worldwide forward and reverse geocoding API.</li>
+        </ul>
+
+        <h4 style="margin-top: 14px; color: var(--primary);">Scientific Rigour &amp; Statistics</h4>
+        <p style="font-size: 0.9rem; line-height: 1.6; margin-top: 4px;">Rather than relying on ordinary least squares regression, TerraScope applies non-parametric <strong>Mann-Kendall monotonic trend tests</strong> paired with <strong>Sen's robust slope estimators</strong> and 95% confidence intervals. Every quantitative calculation is translated into an accessible plain-language narrative.</p>
+      </div>
+    </div>
+  </div>
 
   <!-- External Libraries -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>

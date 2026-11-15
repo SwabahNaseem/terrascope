@@ -27,6 +27,13 @@ def create_app(config_class=None):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
+    # Initialize required runtime cache directories
+    if hasattr(config_class, "init_directories"):
+        try:
+            config_class.init_directories()
+        except Exception:
+            pass
+
     # Enable Cross-Origin Resource Sharing
     try:
         from flask_cors import CORS

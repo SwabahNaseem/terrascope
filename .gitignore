@@ -56,6 +56,12 @@ desktop.ini
 htmlcov/
 .pytest_cache/
 
+# Local maintenance and scratch scripts
+check_*.py
+resolve_*.py
+test_geo_resolved.py
+scratch/
+
 # Logs
 *.log
 logs/
